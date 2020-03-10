@@ -2,17 +2,22 @@ package org.eclipse.epsilon.picto.diff.source;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.epsilon.picto.StringContentPromise;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.epsilon.picto.ViewTree;
+import org.eclipse.epsilon.picto.diff.FileWrapperEditorPart;
+import org.eclipse.epsilon.picto.diff.ViewTreeMerger;
 import org.eclipse.epsilon.picto.dom.Parameter;
 import org.eclipse.epsilon.picto.dom.Picto;
 import org.eclipse.epsilon.picto.dom.PictoFactory;
+import org.eclipse.epsilon.picto.source.PictoSource;
+import org.eclipse.epsilon.picto.source.PictoSourceExtensionPointManager;
 import org.eclipse.epsilon.picto.source.SimpleSource;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IFileEditorInput;
 
 public class PictoDiffSource extends SimpleSource {
 
@@ -62,33 +67,41 @@ public class PictoDiffSource extends SimpleSource {
 	
 	@Override
 	public ViewTree getViewTree(IEditorPart editor) throws Exception {
-		ViewTree viewTree = new ViewTree();
-		String graph_format = "html";
-		String graph_icon = "diagram-ff0000";
 
 		Picto pictoDiff = getRenderingMetadata(editor);
 		List<Parameter> parameters = pictoDiff.getParameters();
 		Parameter pLeft = parameters.stream().filter(p -> p.getName().equals("left")).findFirst().get();
 		Parameter pRight = parameters.stream().filter(p -> p.getName().equals("right")).findFirst().get();
 
-		// 1. include the diff ViewTree 
-		ArrayList<String> path = new ArrayList<String>();
-		path.add("Model");
-		path.add("Differences");
-		viewTree.addPath(path, new StringContentPromise("Diff file content"), graph_format, graph_icon);
+		IProject project = null;
+		if (editor.getEditorInput() instanceof IFileEditorInput) {
+			IFileEditorInput input = (IFileEditorInput)editor.getEditorInput();
+			project = input.getFile().getProject();
+		}
+		if (project == null) {
+			return null;
+		}
+		FileWrapperEditorPart leftWrapper = 
+				new FileWrapperEditorPart(project.getFile(new Path(pLeft.getFile())));
+		FileWrapperEditorPart rightWrapper = 
+				new FileWrapperEditorPart(project.getFile(new Path(pRight.getFile())));
 
-		// 2. get the ViewTrees from both picto files being included
-		path.remove(1);
-		path.add("Left Graph");
-		viewTree.addPath(path, new StringContentPromise(
-				String.format("Rendering of the %s file", pLeft.getFile())), graph_format, graph_icon);
+		PictoSource leftPictoSource = getSource(leftWrapper);
+		PictoSource rightPictoSource = getSource(rightWrapper);
 
-		path.remove(1);
-		path.add("Right Graph");
-		viewTree.addPath(path, new StringContentPromise(
-				String.format("Rendering of the %s file", pRight.getFile())), graph_format, graph_icon);
+		return ViewTreeMerger.merge(
+				leftPictoSource.getViewTree(leftWrapper), rightPictoSource.getViewTree(rightWrapper));
+	}
 
-		return viewTree;
+	protected PictoSource getSource(IEditorPart editorPart) {
+		List<PictoSource> sources = 
+				new PictoSourceExtensionPointManager().getExtensions();
+		for (PictoSource source : sources) {
+			if (source.supports(editorPart)) {
+				return source;
+			}
+		}
+		return null;
 	}
 
 }
