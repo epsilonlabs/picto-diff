@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry exported="true" kind="lib" path="target/apiguardian-api-1.0.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/commons-exec-1.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/commons-io-2.6.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/graphviz-java-0.12.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/j2v8_linux_x86_64-4.6.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/j2v8_macosx_x86_64-4.6.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/j2v8_win32_x86_64-4.6.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/j2v8_win32_x86-4.6.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/jcl-over-slf4j-1.7.26.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/jsr305-3.0.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/jul-to-slf4j-1.7.26.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/junit-platform-commons-1.4.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/junit-platform-engine-1.4.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/junit-platform-launcher-1.4.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/logback-classic-1.2.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/logback-core-1.2.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/nashorn-promise-0.1.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/opentest4j-1.1.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/org.eclipse.epsilon.picto.diff.graphviz-0.0.1-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/slf4j-api-1.7.26.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/svgSalamander-1.1.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/viz.js-2.1.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/xmlgraphics-commons-2.3.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
+	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="target/classes" path="src">
+		<attributes>
+			<attribute name="optional" value="true"/>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="output" path="target/classes"/>
+</classpath>
