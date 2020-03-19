@@ -1,0 +1,10 @@
+digraph structs {
+    node [shape=plaintext];
+
+    struct1 [label=<<TABLE COLOR = "red">
+    <TR><TD><img onmouseover="bigImg(this)" onmouseout="normalImg(this)" src="C:\Users\Will\Git\picto-diff\org.eclipse.epsilon.picto.diff\example\file.png"/></TD></TR>
+    
+    <TR><TD>caption</TD></TR>
+    </TABLE>>];
+}
+

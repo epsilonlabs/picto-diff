@@ -1,0 +1,54 @@
+digraph "pdiff" {
+edge ["dir"="none"]
+subgraph "cluster_left" {
+edge ["dir"="forward"]
+graph ["label"="digraph"]
+subgraph "cluster_Filesystem" {
+edge ["dir"="none"]
+graph ["label"=""]
+"Filesystem" ["shape"="record","label"="{Filesystem|name : String|}"]
+}
+subgraph "cluster_Admin" {
+edge ["dir"="none"]
+graph ["label"=""]
+"Admin" ["shape"="record","label"="{Admin||}"]
+}
+subgraph "cluster_File" {
+edge ["dir"="none"]
+graph ["label"=""]
+"File" ["shape"="record","label"="{File|name : String|}"]
+} -> subgraph "cluster_PDFFile" {
+edge ["dir"="none"]
+graph ["label"=""]
+"PDFFile" ["shape"="record","label"="{PDFFile||}"]
+} ["dir"="back","arrowtail"="empty","name"="e7"]
+}
+subgraph "cluster_right" {
+edge ["dir"="forward"]
+graph ["label"="digraph++"]
+subgraph "cluster__Filesystem" {
+edge ["dir"="none"]
+graph ["color"="orange","label"=""]
+"_Filesystem" ["shape"="record","label"="{Filesystem|label : String|}","fontcolor"="orange"]
+}
+subgraph "cluster__PDFFile" {
+edge ["dir"="none"]
+graph ["color"="red","style"="dashed","fontcolor"="red","label"=""]
+"_PDFFile" ["shape"="record","label"="{PDFFile||}"]
+}
+subgraph "cluster__Admin" {
+edge ["dir"="none"]
+graph ["color"="red","style"="dashed","fontcolor"="red","label"=""]
+"_Admin" ["shape"="record","label"="{Admin||}"]
+}
+subgraph "cluster__File" {
+edge ["dir"="none"]
+graph ["label"=""]
+"_File" ["shape"="record","label"="{File|name : String|}"]
+} -> subgraph "cluster__PDFFile" {
+edge ["dir"="none"]
+graph ["label"=""]
+"_PDFFile" ["shape"="record","label"="{PDFFile||}"]
+} ["dir"="back","arrowtail"="empty","name"="e7","color"="red","style"="dashed","fontcolor"="red"]
+}
+}

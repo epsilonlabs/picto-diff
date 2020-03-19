@@ -1,0 +1,4 @@
+digraph mainmap {
+  command [URL="http://www.york.ac.uk"];
+  command -> output [URL="colors.html"];
+}

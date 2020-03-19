@@ -1,0 +1,12 @@
+digraph G {
+	n1 [shape=box, label="foo"];
+	n2 [shape=polygon, sides=6, label="barr"];
+	n3 [shape=box, label="foo2"];
+	n4 [shape=box, label="foo3"];
+	n5 [shape=box, label="foo4"];
+	n1 -> n2 ["dir"="forward", name="e1", label="foo2bar"];
+	n2 -> n4 ["dir"="forward", name="e2", label="bar2foo3"];
+	n2 -> n3 ["dir"="forward", name="e3", label="bar2foo22"];
+	n3 -> n5 ["dir"="forward", name="e4", label="foo22foo4"];
+	
+}

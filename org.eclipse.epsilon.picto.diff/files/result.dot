@@ -1,0 +1,22 @@
+digraph {
+edge ["dir"="none"]
+subgraph "cluster_left" {
+edge ["dir"="forward"]
+graph ["label"="digraph"]
+"Filesystem" ["shape"="record","label"="{Filesystem|name : String|}"]
+"File" ["shape"="record","label"="{File|name : String|}"]
+"PDFFile" ["shape"="record","label"="{PDFFile||}"]
+"Admin" ["shape"="record","label"="{Admin||}"]
+"File" -> "PDFFile" ["dir"="back","arrowtail"="empty","name"="e7"]
+}
+subgraph "cluster_right" {
+edge ["dir"="forward"]
+graph ["label"="digraph++"]
+"_Filesystem" ["shape"="record","label"="{Filesystem|label : String|}","fontcolor"="orange"]
+"_File" ["shape"="record","label"="{File|name : String|}"]
+"_PDFFile" ["shape"="record","label"="{PDFFile||}","color"="red","style"="dashed","fontcolor"="red"]
+"_Admin" ["shape"="record","label"="{Admin||}","color"="red","style"="dashed","fontcolor"="red"]
+"_File" -> "_PDFFile" ["dir"="back","arrowtail"="empty","name"="e7","color"="red","style"="dashed","fontcolor"="red"]
+}
+"Filesystem" -> "_Filesystem" ["constraint"="false","style"="dashed","dir"="forward","color"="orange"]
+}

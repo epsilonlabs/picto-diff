@@ -24,6 +24,10 @@ public class FileWrapperEditorPart implements IEditorPart {
 	public IEditorInput getEditorInput() {
 		return new FileInPlaceEditorInput(file);
 	}
+	
+	public IFile getFile() {
+		return file;
+	}
 
 	@Override
 	public void addPropertyListener(IPropertyListener listener) {
