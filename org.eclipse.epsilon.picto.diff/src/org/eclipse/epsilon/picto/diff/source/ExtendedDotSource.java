@@ -1,0 +1,62 @@
+package org.eclipse.epsilon.picto.diff.source;
+
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import org.eclipse.core.resources.IFile;
+import org.eclipse.epsilon.picto.StringContentPromise;
+import org.eclipse.epsilon.picto.ViewTree;
+import org.eclipse.epsilon.picto.diff.engines.dot.util.GraphPromiseGenerator;
+import org.eclipse.epsilon.picto.diff.engines.dot.util.SubGraphPromise;
+import org.eclipse.epsilon.picto.source.DotSource;
+import org.eclipse.ui.IEditorPart;
+
+import guru.nidi.graphviz.model.MutableGraph;
+import guru.nidi.graphviz.parse.Parser;
+
+public class ExtendedDotSource extends DotSource {
+
+	@Override
+	public String getFileExtension() {
+		return "edot";
+	}
+
+	@Override
+	public String getFormat() {
+		return "graphviz-dot";
+	}
+
+	protected String getIcon() {
+		return "diagram-ff0000";
+	}
+
+	@Override
+	public ViewTree getViewTree(IEditorPart editor) throws Exception {
+		IFile iFile = waitForFile(editor);
+		if (iFile == null)
+			return createEmptyViewTree();
+
+		InputStream fileStream = new FileInputStream(iFile.getLocation().toOSString());
+		MutableGraph graph = new Parser().read(fileStream);
+		GraphPromiseGenerator promise = new GraphPromiseGenerator(graph.copy());
+
+		ViewTree viewTree = new ViewTree();
+		ArrayList<String> paths = new ArrayList<String>();
+
+		paths.add("Graph");
+		StringContentPromise graphPromise = new StringContentPromise(promise.getDotGraph());
+		viewTree.addPath(paths, graphPromise, getFormat(), getIcon(), new ArrayList<>());
+
+		paths.add("Nodes");
+		HashMap<String, SubGraphPromise> source_map = promise.getPromiseMap();
+		for (String key : source_map.keySet()) {
+			paths.add(key);
+			viewTree.addPath(
+					paths, source_map.get(key), getFormat(), getIcon(), new ArrayList<>());
+			paths.remove(paths.size() - 1);
+		}
+		return viewTree;
+	}
+}

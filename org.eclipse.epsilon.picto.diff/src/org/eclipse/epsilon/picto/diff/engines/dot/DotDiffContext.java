@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 
 import org.eclipse.epsilon.picto.diff.engines.dot.util.GraphPromiseGenerator;
+import org.eclipse.epsilon.picto.diff.engines.dot.util.SubGraphPromise;
 
 import guru.nidi.graphviz.model.MutableGraph;
 import guru.nidi.graphviz.parse.Parser;
@@ -70,18 +71,18 @@ public class DotDiffContext {
 	}
 	
 	public String getSourceGraphPromise() {
-		return source_pg.getGraphPromise();
+		return source_pg.getDotGraph();
 	}
 	
-	public HashMap<String, String> getSourcePromiseMap() {
+	public HashMap<String, SubGraphPromise> getSourcePromiseMap() {
 		return source_pg.getPromiseMap();
 	}
 	
 	public String getTargetGraphPromise() {
-		return target_pg.getGraphPromise();
+		return target_pg.getDotGraph();
 	}
 	
-	public HashMap<String, String> getTargetPromiseMap() {
+	public HashMap<String, SubGraphPromise> getTargetPromiseMap() {
 		return target_pg.getPromiseMap();
 	}
 	

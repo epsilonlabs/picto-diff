@@ -1,7 +1,5 @@
 package org.eclipse.epsilon.picto.diff.engines.dot.util;
 
-import static guru.nidi.graphviz.model.Factory.mutGraph;
-
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -13,13 +11,12 @@ import guru.nidi.graphviz.engine.Graphviz;
 import guru.nidi.graphviz.model.Link;
 import guru.nidi.graphviz.model.MutableGraph;
 import guru.nidi.graphviz.model.MutableNode;
-import guru.nidi.graphviz.model.PortNode;
 import guru.nidi.graphviz.parse.Parser;
 
 public class GraphPromiseGenerator {
 
 	private MutableGraph graph;
-	private HashMap<String, String> map = new HashMap<String, String>();
+	private HashMap<String, SubGraphPromise> map = new HashMap<>();
 	
 	public GraphPromiseGenerator(MutableGraph graph) {
 		this.graph = graph;
@@ -31,29 +28,37 @@ public class GraphPromiseGenerator {
 		MutableGraph g1 = new Parser().read(dot1);
 		GraphPromiseGenerator pg = new GraphPromiseGenerator(g1);
 		for(MutableNode node: g1.rootNodes()) {
-			System.out.println(pg.getPromise(node));
+			System.out.println(new SubGraphPromise(g1, node).getContent());
+			System.out.println();
 		}
-		System.out.println(pg.getGraphPromise());
-		
+		System.out.println(pg.getSVGGraph());
 	}
 	
 	public void init() {
 		if (graph != null) {
 			for(MutableNode n: graph.nodes()) {
 				String node_name = n.name().toString();
-				map.put(node_name, getPromise(n));
+				map.put(node_name, new SubGraphPromise(graph, n));
 			}
 		}
 	}
 
-	public String getGraphPromise() {
-		return  Graphviz.fromGraph(graph).render(Format.SVG).toString();
+	public String getSVGGraph() {
+		return getGraph(Format.SVG);
 	}
-	
-	public ArrayList<String> getNodePromises() {
-		ArrayList<String> arr = new ArrayList<String>();
-		for(MutableNode node: graph.nodes()) {
-			arr.add(getPromise(node));
+
+	public String getDotGraph() {
+		return getGraph(Format.DOT);
+	}
+
+	protected String getGraph(Format format) {
+		return Graphviz.fromGraph(graph).render(format).toString();
+	}
+
+	public ArrayList<SubGraphPromise> getNodePromises() {
+		ArrayList<SubGraphPromise> arr = new ArrayList<>();
+		for (MutableNode node : graph.nodes()) {
+			arr.add(new SubGraphPromise(graph, node));
 		}
 		return arr;
 	}
@@ -62,64 +67,15 @@ public class GraphPromiseGenerator {
 		return (HashSet<String>) map.keySet();
 	}
 	
-	public HashMap<String, String> getPromiseMap() {
+	public HashMap<String, SubGraphPromise> getPromiseMap() {
 		return map;
 	}
 	
-	public String getPromiseForNode(String node) {
-		return map.get(node);
-	}
-	
-	public String getPromise(MutableNode node) {
-		String result = "";
-		MutableGraph g = mutGraph();
-		g.setName(node.name().toString());
-		//g.graphAttrs().add("label", node.attrs().get("label"));
-		MutableNode node_copy = getCopy(node);
-		g.rootNodes().add(node_copy);
-
-		for (MutableNode n : graph.nodes()) {
-			for (Link link : n.links()) {
-				boolean node_is_target = false;
-				if (link.to() instanceof PortNode) {
-					PortNode temp = (PortNode) link.to();
-					if (temp.name().toString().equals(node.name().toString())) {
-						node_is_target = true;
-					}
-				} else if (link.to() instanceof MutableNode) {
-					MutableNode temp = (MutableNode) link.to();
-					if (temp.name().toString().equals(node.name().toString())) {
-						node_is_target = true;
-					}
-				}
-				if (node_is_target) {
-					MutableNode source_copy = getCopy(n);
-					g.rootNodes().add(source_copy);
-					link(link, source_copy, node_copy);
-				}
-			}
-		}
-
-		for (Link link : node.links()) {
-			String target_name = "";
-			if (link.to() instanceof PortNode) {
-				PortNode temp = (PortNode) link.to();
-				target_name = temp.name().toString();
-			} else if (link.to() instanceof MutableNode) {
-				MutableNode temp = (MutableNode) link.to();
-				target_name = temp.name().toString();
-			}
-			MutableNode target = findNode(target_name);
-			MutableNode target_copy = getCopy(target);
-			g.rootNodes().add(target_copy);
-			link(link, node_copy, target_copy);
-		}
-
-		result = Graphviz.fromGraph(g).render(Format.DOT).toString();
-		return result;
+	public String getPromiseForNode(String node) throws Exception {
+		return map.get(node).getContent();
 	}
 
-	public MutableNode findNode(String name) {
+	public static MutableNode findNode(String name, MutableGraph graph) {
 		for (MutableNode n : graph.rootNodes()) {
 			if (n.name().toString().equals(name)) {
 				return n;
@@ -128,13 +84,13 @@ public class GraphPromiseGenerator {
 		return null;
 	}
 
-	public MutableNode getCopy(MutableNode node) {
+	public static MutableNode getCopy(MutableNode node) {
 		MutableNode copy = node.copy();
 		copy.links().clear();
 		return copy;
 	}
 
-	public void link(Link l, MutableNode s, MutableNode t) {
+	public static void link(Link l, MutableNode s, MutableNode t) {
 		Link link = s.linkTo(t);
 		link.attrs().add(l.copy());
 		s.addLink(link);
