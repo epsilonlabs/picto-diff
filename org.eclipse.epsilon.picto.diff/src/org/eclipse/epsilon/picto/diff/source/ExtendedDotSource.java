@@ -3,7 +3,9 @@ package org.eclipse.epsilon.picto.diff.source;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.epsilon.picto.StringContentPromise;
@@ -48,10 +50,13 @@ public class ExtendedDotSource extends DotSource {
 		paths.add("Graph");
 		StringContentPromise graphPromise = new StringContentPromise(promise.getDotGraph());
 		viewTree.addPath(paths, graphPromise, getFormat(), getIcon(), new ArrayList<>());
+		paths.remove(0);
 
 		paths.add("Nodes");
 		HashMap<String, SubGraphPromise> source_map = promise.getPromiseMap();
-		for (String key : source_map.keySet()) {
+		List<String> nodeNames = new ArrayList<>(source_map.keySet());
+		Collections.sort(nodeNames);
+		for (String key : nodeNames) {
 			paths.add(key);
 			viewTree.addPath(
 					paths, source_map.get(key), getFormat(), getIcon(), new ArrayList<>());
