@@ -1,0 +1,18 @@
+digraph G {
+	node[shape=record]
+	edge[dir=back, arrowtail=empty]
+	 
+	Filesystem[label = "{Filesystem|label : String|}"]
+	Folder[label = "{Folder||}"]
+	File->Folder [name="e1"]
+	Drive[label = "{Drive||}"]
+	Folder->Drive [name="e2"]
+	OperatingSystem[label = "{OperatingSystem||}"]
+	File[label = "{File|name : String|}"]
+	Shortcut[label = "{Shortcut||}"]
+	File->Shortcut [name="e3"]
+	
+	Filesystem->Drive[label=" drives* ",arrowtail=diamond, name="e4"];
+	Folder->File[label=" contents* ",arrowtail=diamond, name="e5"];
+	OperatingSystem->Filesystem[label=" filesystem ",arrowtail=diamond, name="e6"];	
+}
