@@ -14,5 +14,7 @@ digraph G {
 	
 	Filesystem->Drive[label=" drives* ",arrowtail=diamond, name="e4"];
 	Folder->File[label=" contents* ",arrowtail=diamond, name="e5"];
-	OperatingSystem->Filesystem[label=" filesystem ",arrowtail=diamond, name="e6"];	
+	OperatingSystem->Filesystem[label=" filesystem ",arrowtail=diamond, name="e6"];
+	ZipFile[label = "{ZipFile||}"]
+	File->ZipFile [name="e7"]
 }
