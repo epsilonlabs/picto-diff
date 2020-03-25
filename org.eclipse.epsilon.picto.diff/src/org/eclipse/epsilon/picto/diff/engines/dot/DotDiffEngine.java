@@ -4,12 +4,23 @@ import static guru.nidi.graphviz.model.Factory.mutGraph;
 import static guru.nidi.graphviz.model.Factory.mutNode;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
 
+import org.eclipse.epsilon.common.util.StringProperties;
+import org.eclipse.epsilon.emc.plainxml.PlainXmlModel;
+import org.eclipse.epsilon.eol.EolModule;
+import org.eclipse.epsilon.eol.models.IModel;
+import org.eclipse.epsilon.picto.StringContentPromise;
+import org.eclipse.epsilon.picto.ViewTree;
+import org.eclipse.epsilon.picto.diff.PictoDiffPlugin;
+import org.eclipse.epsilon.picto.diff.engines.DiffEngine;
 import org.eclipse.epsilon.picto.diff.engines.dot.util.PictoDiffIDUtil;
 import org.eclipse.epsilon.picto.diff.engines.dot.util.PictoDiffUtil;
 import org.eclipse.epsilon.picto.diff.engines.dot.util.PictoDiffValidator;
@@ -21,7 +32,7 @@ import guru.nidi.graphviz.model.MutableGraph;
 import guru.nidi.graphviz.model.MutableNode;
 import guru.nidi.graphviz.model.PortNode;
 
-public class DotDiffEngine {
+public class DotDiffEngine implements DiffEngine {
 	
 	private ArrayList<String> feedbacks = new ArrayList<String>();
 	public enum DISPLAY_MODE {ALL, CHANGED};
@@ -51,18 +62,24 @@ public class DotDiffEngine {
 	protected HashMap<MutableNode, HashSet<String>> unchangedAttrs = new HashMap<MutableNode, HashSet<String>>();
 	
 	public static void main(String[] args) throws IOException {
-		DotDiffContext context = new DotDiffContext("files/simple_filesystem.dot", "files/simple_filesystem2.dot");
-	    DotDiffEngine comparisonEngine = new DotDiffEngine(context, DISPLAY_MODE.CHANGED);
+
+		DotDiffContext context = new DotDiffContext(
+				new FileInputStream("files/simple_filesystem.dot"),
+				new FileInputStream("files/simple_filesystem2.dot"));
+		DotDiffEngine comparisonEngine = new DotDiffEngine(context);
 	    comparisonEngine.load();
-	    context.setSerialiseOptions("example/result_1.svg", "files/result_1.dot");
+		context.setSerialiseOptions("example/result_1.svg", "example/result_1.dot");
 	    comparisonEngine.compare();
 	    comparisonEngine.serialise();
 	}
 
-	public DotDiffEngine(DotDiffContext context, DISPLAY_MODE mode) {
+	public DotDiffEngine() {
+	}
+
+	public DotDiffEngine(DotDiffContext context) {
 		this.context = context;
 	}
-	
+
 	public boolean load() {
 		try {
 			if (context.loadGraphs()) {
@@ -692,5 +709,58 @@ public class DotDiffEngine {
 		}
 		return ret;
 	}
-	
+
+	@Override
+	public boolean supports(String format) {
+		return format.equals("graphviz-dot");
+	}
+
+	@Override
+	public void diff(ViewTree diffView, ViewTree left, ViewTree right) throws Exception {
+
+		this.context = new DotDiffContext(left.getPromise().getContent(), right.getPromise().getContent());
+		load();
+		compare();
+
+		String resultDot = Graphviz.fromGraph(result).render(Format.DOT).toString();
+		diffView.setPromise(new StringContentPromise(resultDot));
+		diffView.setFormat("graphviz-dot");
+
+		File tempDir = Files.createTempDirectory("picto").toFile();
+		File temp = Files.createTempFile(tempDir.toPath(), "temp-svg", ".svg").toFile();
+		saveSVGFile(temp);
+
+		PlainXmlModel xml_model = new PlainXmlModel();
+		StringProperties targetProperties = new StringProperties();
+		targetProperties.put(PlainXmlModel.PROPERTY_FILE, temp.getAbsolutePath());
+		targetProperties.put(PlainXmlModel.PROPERTY_NAME, "M");
+		targetProperties.put(PlainXmlModel.PROPERTY_READONLOAD, "true");
+		targetProperties.put(PlainXmlModel.PROPERTY_STOREONDISPOSAL, "true");
+		xml_model.load(targetProperties);
+
+		ArrayList<IModel> allTheModels = new ArrayList<IModel>();
+		allTheModels.add(xml_model);
+
+		EolModule eolModule = new EolModule();
+		for (IModel theModel : allTheModels) {
+			eolModule.getContext().getModelRepository().addModel(theModel);
+		}
+		java.net.URI eolFile = null;
+		if (PictoDiffPlugin.getDefault() == null) {
+			eolFile = new File("transformations/addScriptToSVG.eol").toURI();
+		}
+		else {
+			eolFile = PictoDiffPlugin.getDefault().getBundle()
+					.getResource("transformations/addScriptToSVG.eol").toURI();
+		}
+		eolModule.parse(eolFile);
+		eolModule.execute();
+		eolModule.getContext().getModelRepository().dispose();
+
+		String c = new String(Files.readAllBytes(Paths.get(temp.toURI())));
+		diffView.setPromise(new StringContentPromise(c));
+		diffView.setFormat("html");
+		diffView.setIcon("diagram-ff0000");
+	}
+
 }

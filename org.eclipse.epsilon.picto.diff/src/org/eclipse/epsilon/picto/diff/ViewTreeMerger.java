@@ -1,27 +1,45 @@
 package org.eclipse.epsilon.picto.diff;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.epsilon.picto.StringContentPromise;
 import org.eclipse.epsilon.picto.ViewTree;
+import org.eclipse.epsilon.picto.diff.engines.DiffEngine;
+import org.eclipse.epsilon.picto.diff.engines.dot.DotDiffEngine;
+import org.eclipse.epsilon.picto.diff.engines.dummy.DummyDiffEngine;
 
 public class ViewTreeMerger {
 
+	static final List<DiffEngine> DIFF_ENGINES =
+			Arrays.asList(
+					new DotDiffEngine(),
+					new DummyDiffEngine());
+
 	public static void main(String[] args) throws Exception {
 
-		ViewTree pathTree = new ViewTree();
-		pathTree.addPath(Arrays.asList("e1", "e2"),
-				new StringContentPromise("c1"), "text", "", Collections.emptyList());
-		pathTree.addPath(Arrays.asList("e1", "e3", "e4"),
-				new StringContentPromise("c2"), "text", "", Collections.emptyList());
-		pathTree.addPath(Arrays.asList("e1", "e3", "e5"),
-				new StringContentPromise("This is a very very long content in a view tree"), "text", "",
-				Collections.emptyList());
-		System.out.println(pathTree);
+		String dot1 = new String(Files.readAllBytes(Paths.get("files/simple_filesystem.dot")));
+		String dot2 = new String(Files.readAllBytes(Paths.get("files/simple_filesystem2.dot")));
 
+		ViewTree v1 = new ViewTree();
+		v1.setPromise(new StringContentPromise(dot1));
+		v1.setFormat("graphviz-dot");
+
+		ViewTree v2 = new ViewTree();
+		v2.setFormat("graphviz-dot");
+		v2.setPromise(new StringContentPromise(dot2));
+
+		ViewTree diffView = new ViewTree();
+		diff(diffView, v1, v2);
+
+		System.out.println(diffView.getPromise().getContent());
+		Files.write(Paths.get("example/simple_filesystemdiff.dot"),
+				diffView.getPromise().getContent().getBytes(),
+				StandardOpenOption.CREATE);
 	}
 
 	public static ViewTree diffMerge(ViewTree left, ViewTree right) throws Exception {
@@ -31,48 +49,38 @@ public class ViewTreeMerger {
 	private static ViewTree diffMerge(ViewTree mergedViewTree, List<String> currentPath,
 			ViewTree left, ViewTree right) throws Exception {
 
+		if (currentPath.size() == 1) {
+			// compare roots of the viewtrees
+			diff(mergedViewTree, left, right);
+		}
+
 		ViewTree currentLeft = left.forPath(currentPath);
 		ViewTree currentRight = right.forPath(currentPath);
 		List<ViewTree> remainingRightChildren = new ArrayList<>(currentRight.getChildren());
 
 		for (ViewTree leftChild : currentLeft.getChildren()) {
 			ViewTree counterpart = null;
-			ViewTree diff = null;
+			ViewTree diffView = null;
 			for (ViewTree rightChild : remainingRightChildren) {
 				if (leftChild.getName().equals(rightChild.getName())) {
 					counterpart = rightChild;
 					remainingRightChildren.remove(counterpart);
-					diff = copy(leftChild);
-					if (leftChild.getPromise() == null && counterpart.getPromise() == null) {
-						diff.setPromise(new StringContentPromise("Both viewtrees empty"));
-						diff.setFormat("text");
-					}
-					else if (leftChild.getPromise() == null || counterpart.getPromise() == null) {
-						diff.setPromise(new StringContentPromise("Some viewtree empty"));
-						diff.setFormat("text");
-					}
-					else if (leftChild.getPromise().getContent().equals(counterpart.getPromise().getContent())) {
-						diff.setName(String.format("%s (Same)", diff.getName()));
-					}
-					else {
-						diff.setName(String.format("%s (Modified)", diff.getName()));
-						diff.setPromise(new StringContentPromise(String.format("%s: Content differs", leftChild.getName())));
-						diff.setFormat("text");
-					}
+					diffView = copy(leftChild);
+					diff(diffView, leftChild, counterpart);
 					if (!leftChild.getChildren().isEmpty()) {
 						List<String> newPath = new ArrayList<>(currentPath);
 						newPath.add(leftChild.getName());
-						diff = diffMerge(diff, newPath, left, right);
+						diffView = diffMerge(diffView, newPath, left, right);
 					}
 					break;
 				}
 			}
 			if (counterpart == null) {
 				// deleted elements
-				diff = copy(leftChild);
-				diff.setName(String.format("%s (Deleted)", leftChild.getName()));
+				diffView = copy(leftChild);
+				diffView.setName(String.format("%s (Deleted)", leftChild.getName()));
 			}
-			append(mergedViewTree, diff, "");
+			append(mergedViewTree, diffView, "");
 		}
 
 		for (ViewTree remainingChild : remainingRightChildren) {
@@ -120,4 +128,28 @@ public class ViewTreeMerger {
 		return copy;
 	}
 
+	private static void diff(ViewTree diffView, ViewTree left, ViewTree right) throws Exception {
+		if (left.getPromise() == null && right.getPromise() == null) {
+			if (!left.getName().equals("") && !right.getName().equals("")) {
+				diffView.setPromise(new StringContentPromise("Both viewtrees empty"));
+				diffView.setFormat("text");
+			}
+		}
+		else if (left.getPromise() == null || right.getPromise() == null) {
+			diffView.setPromise(new StringContentPromise("Some viewtree empty"));
+			diffView.setFormat("text");
+		}
+		else if (left.getPromise().getContent().equals(right.getPromise().getContent())) {
+			diffView.setName(String.format("%s (Same)", diffView.getName()));
+		}
+		else {
+			diffView.setName(String.format("%s (Modified)", diffView.getName()));
+			for (DiffEngine engine : DIFF_ENGINES) {
+				if (engine.supports(left.getFormat())) {
+					engine.diff(diffView, left, right);
+					break;
+				}
+			}
+		}
+	}
 }

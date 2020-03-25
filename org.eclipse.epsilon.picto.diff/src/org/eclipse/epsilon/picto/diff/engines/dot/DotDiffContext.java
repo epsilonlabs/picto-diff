@@ -1,6 +1,5 @@
 package org.eclipse.epsilon.picto.diff.engines.dot;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -15,8 +14,10 @@ public class DotDiffContext {
 
 	protected InputStream ss;
 	protected InputStream ts;
-	protected String sourceFile;
-	protected String targetFile;
+	boolean fromStream = false;
+
+	protected String sourceDot;
+	protected String targetDot;
 	protected MutableGraph sourceGraph;
 	protected MutableGraph targetGraph;
 	protected GraphPromiseGenerator source_pg;
@@ -25,22 +26,32 @@ public class DotDiffContext {
 	protected String serialise_image = null;
 	protected String serialise_dot = null;
 	
-	public DotDiffContext(String sourceFile, String targetFile) {
-		this.sourceFile = sourceFile;
-		this.targetFile = targetFile;
+	public DotDiffContext(String sourceDot, String targetDot) {
+		this.sourceDot = sourceDot;
+		this.targetDot = targetDot;
+	}
+
+	public DotDiffContext(InputStream sourceStream, InputStream targetStream) {
+		this.ss = sourceStream;
+		this.ts = targetStream;
+		fromStream = true;
 	}
 	
 	public boolean loadGraphs() throws IOException {
- 		ss = new FileInputStream(sourceFile);
-		sourceGraph = new Parser().read(ss);
-		ts = new FileInputStream(targetFile);
-		targetGraph = new Parser().read(ts);
+		if (fromStream) {
+			sourceGraph = new Parser().read(ss);
+			targetGraph = new Parser().read(ts);
+			ss.close();
+			ts.close();
+		}
+		else {
+			sourceGraph = new Parser().read(sourceDot);
+			targetGraph = new Parser().read(targetDot);
+		}
 
 		source_pg = new GraphPromiseGenerator(sourceGraph.copy());
 		target_pg = new GraphPromiseGenerator(targetGraph.copy());
-		
-		ss.close();
-		ts.close();
+
 		return true;
 	}
 	
