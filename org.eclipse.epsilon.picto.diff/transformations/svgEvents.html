@@ -1,0 +1,93 @@
+<!-- html fragment appended to the end of the DotDiffEngine comparison result -->
+<script type="text/javascript">
+
+    window.addEventListener('load', function () {
+        var SVGDoc = document.getElementsByTagName("svg")[0];
+        SVGDoc.setAttribute("onmouseover", "mouseOver(evt)");
+        SVGDoc.setAttribute("onmouseout", "mouseOut(evt)");
+    });
+
+    var selectionColor = "green";
+
+    function mouseOver(evt) {
+        var element = evt.target;
+        var parent = element.parentNode;
+        if (parent.getAttribute("class") == "node") {
+            var children = parent.childNodes;
+            var title = '';
+            for (var i = 0; i < children.length; i++) {
+                if (children[i] instanceof SVGTitleElement) {
+                    title = children[i].childNodes[0].nodeValue;
+                }
+                if (children[i] instanceof SVGPolygonElement) {
+                    children[i].setAttribute("fill", selectionColor);
+                }
+            }
+            var nodes = document.getElementsByClassName("node");
+            var index = -1;
+            for (var i = 0; i < nodes.length; i++) {
+                for (var j = 0; j < nodes[i].childNodes.length; j++) {
+                    if (nodes[i].childNodes[j] instanceof SVGTitleElement) {
+                        if (title[0] == "_") {
+                            if ((title) == "_" + nodes[i].childNodes[j].childNodes[0].nodeValue) {
+                                index = i;
+                            }
+                        }
+                        else {
+                            if (("_" + title) == nodes[i].childNodes[j].childNodes[0].nodeValue) {
+                                index = i;
+                            }
+                        }
+                    }
+                    if (nodes[i].childNodes[j] instanceof SVGPolygonElement) {
+                        if (index == i) {
+                            nodes[i].childNodes[j].setAttribute("fill", selectionColor);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function mouseOut(evt) {
+        var element = evt.target;
+        var parent = element.parentNode;
+        if (parent.getAttribute("class") == "node") {
+            var children = parent.childNodes;
+            var title = '';
+            for (var i = 0; i < children.length; i++) {
+                if (children[i] instanceof SVGTitleElement) {
+                    title = children[i].childNodes[0].nodeValue;
+                }
+                if (children[i] instanceof SVGPolygonElement) {
+                    children[i].setAttribute("fill", "none");
+                }
+            }
+            var nodes = document.getElementsByClassName("node");
+            var index = -1;
+            for (var i = 0; i < nodes.length; i++) {
+                for (var j = 0; j < nodes[i].childNodes.length; j++) {
+                    if (nodes[i].childNodes[j] instanceof SVGTitleElement) {
+                        if (title[0] == "_") {
+                            if ((title) == "_" + nodes[i].childNodes[j].childNodes[0].nodeValue) {
+                                index = i;
+                            }
+                        }
+                        else {
+                            if (("_" + title) == nodes[i].childNodes[j].childNodes[0].nodeValue) {
+                                index = i;
+                            }
+                        }
+                    }
+                    if (nodes[i].childNodes[j] instanceof SVGPolygonElement) {
+                        if (index == i) {
+                            nodes[i].childNodes[j].setAttribute("fill", "none");
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+</script>

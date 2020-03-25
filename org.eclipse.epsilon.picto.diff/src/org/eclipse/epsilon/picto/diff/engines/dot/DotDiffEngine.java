@@ -13,10 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
 
-import org.eclipse.epsilon.common.util.StringProperties;
-import org.eclipse.epsilon.emc.plainxml.PlainXmlModel;
-import org.eclipse.epsilon.eol.EolModule;
-import org.eclipse.epsilon.eol.models.IModel;
+import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.epsilon.picto.StringContentPromise;
 import org.eclipse.epsilon.picto.ViewTree;
 import org.eclipse.epsilon.picto.diff.PictoDiffPlugin;
@@ -717,50 +714,23 @@ public class DotDiffEngine implements DiffEngine {
 
 	@Override
 	public void diff(ViewTree diffView, ViewTree left, ViewTree right) throws Exception {
-
 		this.context = new DotDiffContext(left.getPromise().getContent(), right.getPromise().getContent());
 		load();
 		compare();
-
-		String resultDot = Graphviz.fromGraph(result).render(Format.DOT).toString();
-		diffView.setPromise(new StringContentPromise(resultDot));
-		diffView.setFormat("graphviz-dot");
-
-		File tempDir = Files.createTempDirectory("picto").toFile();
-		File temp = Files.createTempFile(tempDir.toPath(), "temp-svg", ".svg").toFile();
-		saveSVGFile(temp);
-
-		PlainXmlModel xml_model = new PlainXmlModel();
-		StringProperties targetProperties = new StringProperties();
-		targetProperties.put(PlainXmlModel.PROPERTY_FILE, temp.getAbsolutePath());
-		targetProperties.put(PlainXmlModel.PROPERTY_NAME, "M");
-		targetProperties.put(PlainXmlModel.PROPERTY_READONLOAD, "true");
-		targetProperties.put(PlainXmlModel.PROPERTY_STOREONDISPOSAL, "true");
-		xml_model.load(targetProperties);
-
-		ArrayList<IModel> allTheModels = new ArrayList<IModel>();
-		allTheModels.add(xml_model);
-
-		EolModule eolModule = new EolModule();
-		for (IModel theModel : allTheModels) {
-			eolModule.getContext().getModelRepository().addModel(theModel);
-		}
-		java.net.URI eolFile = null;
+		String resultDot = Graphviz.fromGraph(result).render(Format.SVG).toString();
+		String svgEvents = null;
+		String svgEventsFile = "transformations/svgEvents.html";
 		if (PictoDiffPlugin.getDefault() == null) {
-			eolFile = new File("transformations/addScriptToSVG.eol").toURI();
+			// Standalone java
+			svgEvents = new String(Files.readAllBytes(Paths.get(svgEventsFile)));
 		}
 		else {
-			eolFile = PictoDiffPlugin.getDefault().getBundle()
-					.getResource("transformations/addScriptToSVG.eol").toURI();
+			// Eclipse plugin (works, but there is probably an easier way to do this?)
+			svgEvents = new String(Files.readAllBytes(Paths.get(
+					FileLocator.resolve(PictoDiffPlugin.getDefault().getBundle().getEntry(svgEventsFile)).getPath())));
 		}
-		eolModule.parse(eolFile);
-		eolModule.execute();
-		eolModule.getContext().getModelRepository().dispose();
-
-		String c = new String(Files.readAllBytes(Paths.get(temp.toURI())));
-		diffView.setPromise(new StringContentPromise(c));
+		diffView.setPromise(new StringContentPromise(resultDot + svgEvents));
 		diffView.setFormat("html");
 		diffView.setIcon("diagram-ff0000");
 	}
-
 }

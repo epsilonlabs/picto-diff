@@ -37,7 +37,7 @@ public class ViewTreeMerger {
 		diff(diffView, v1, v2);
 
 		System.out.println(diffView.getPromise().getContent());
-		Files.write(Paths.get("example/simple_filesystemdiff.dot"),
+		Files.write(Paths.get("example/simple_filesystemdiff.html"),
 				diffView.getPromise().getContent().getBytes(),
 				StandardOpenOption.CREATE);
 	}
