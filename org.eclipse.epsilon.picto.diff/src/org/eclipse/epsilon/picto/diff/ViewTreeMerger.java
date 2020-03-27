@@ -1,5 +1,6 @@
 package org.eclipse.epsilon.picto.diff;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -10,36 +11,65 @@ import java.util.List;
 import org.eclipse.epsilon.picto.StringContentPromise;
 import org.eclipse.epsilon.picto.ViewTree;
 import org.eclipse.epsilon.picto.diff.engines.DiffEngine;
-import org.eclipse.epsilon.picto.diff.engines.dot.DotDiffEngine;
-import org.eclipse.epsilon.picto.diff.engines.dummy.DummyDiffEngine;
+import org.eclipse.epsilon.picto.diff.engines.DiffEngineFactory;
+import org.eclipse.epsilon.picto.diff.engines.dot.DotDiffEngineFactory;
+import org.eclipse.epsilon.picto.diff.engines.dummy.DummyDiffEngineFactory;
 
 public class ViewTreeMerger {
 
-	static final List<DiffEngine> DIFF_ENGINES =
+	static final List<DiffEngineFactory> DIFF_ENGINE_FACTORIES =
 			Arrays.asList(
-					new DotDiffEngine(),
-					new DummyDiffEngine());
+					new DotDiffEngineFactory(),
+					new DummyDiffEngineFactory());
 
 	public static void main(String[] args) throws Exception {
 
-		String dot1 = new String(Files.readAllBytes(Paths.get("files/simple_filesystem.dot")));
-		String dot2 = new String(Files.readAllBytes(Paths.get("files/simple_filesystem2.dot")));
+		String filesLocationFormat = "files/%s";
+		String outputFolder = "diffResult";
+		String outputLocationFormat = outputFolder + "/%s-diffResult.html";
 
-		ViewTree v1 = new ViewTree();
-		v1.setPromise(new StringContentPromise(dot1));
-		v1.setFormat("graphviz-dot");
+		File directory = new File(outputFolder);
+		if (!directory.exists()) {
+			directory.mkdirs();
+		}
 
-		ViewTree v2 = new ViewTree();
-		v2.setFormat("graphviz-dot");
-		v2.setPromise(new StringContentPromise(dot2));
+		String baseline = new String(
+				Files.readAllBytes(Paths.get(String.format(filesLocationFormat, "baseline.dot"))));
+		ViewTree baselineView = new ViewTree();
+		baselineView.setPromise(new StringContentPromise(baseline));
+		baselineView.setFormat("graphviz-dot");
 
-		ViewTree diffView = new ViewTree();
-		diff(diffView, v1, v2);
+		List<String> modifiedFiles = Arrays.asList(
+				"baseline-addProperty.dot",
+				"baseline-addNode.dot",
+				"baseline-addEdges.dot",
+				"baseline-addEdgeToNewNode.dot");
 
-		System.out.println(diffView.getPromise().getContent());
-		Files.write(Paths.get("example/simple_filesystemdiff.html"),
-				diffView.getPromise().getContent().getBytes(),
-				StandardOpenOption.CREATE);
+		//		modifiedFiles = Arrays.asList("baseline-addEdges.dot");
+
+		for (String file : modifiedFiles) {
+
+			String modifiedFile = String.format(filesLocationFormat, file);
+			String modifiedDot = new String(Files.readAllBytes(Paths.get(modifiedFile)));
+			ViewTree modifiedView = new ViewTree();
+			modifiedView.setFormat("graphviz-dot");
+			modifiedView.setPromise(new StringContentPromise(modifiedDot));
+
+			ViewTree diffView = new ViewTree();
+			try {
+				diff(diffView, baselineView, modifiedView);
+				Files.write(Paths.get(String.format(outputLocationFormat, file)),
+						diffView.getPromise().getContent().getBytes(),
+						StandardOpenOption.CREATE,
+						StandardOpenOption.WRITE,
+						StandardOpenOption.TRUNCATE_EXISTING);
+			}
+			catch (Exception ex) {
+				System.out.println("-----------------------------------------");
+				System.out.println(String.format("Modified file %s fails", file));
+				ex.printStackTrace();
+			}
+		}
 	}
 
 	public static ViewTree diffMerge(ViewTree left, ViewTree right) throws Exception {
@@ -144,7 +174,8 @@ public class ViewTreeMerger {
 		}
 		else {
 			diffView.setName(String.format("%s (Modified)", diffView.getName()));
-			for (DiffEngine engine : DIFF_ENGINES) {
+			for (DiffEngineFactory engineFactory : DIFF_ENGINE_FACTORIES) {
+				DiffEngine engine = engineFactory.createDiffEngine();
 				if (engine.supports(left.getFormat())) {
 					engine.diff(diffView, left, right);
 					break;

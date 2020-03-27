@@ -1,0 +1,10 @@
+digraph G {
+	node[shape=record]
+	edge[dir=back, arrowtail=empty]
+
+	OperatingSystem[label = "{OperatingSystem||}"]
+	Admin[label="{Admin||}"]
+
+	Filesystem[label = "{Filesystem|name : String|}"]
+	OperatingSystem->Filesystem[label=" filesystem ", arrowtail=diamond, name="e6"];
+}

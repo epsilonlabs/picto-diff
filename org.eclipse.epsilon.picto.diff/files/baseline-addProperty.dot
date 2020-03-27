@@ -1,0 +1,7 @@
+digraph G {
+	node[shape=record]
+	edge[dir=back, arrowtail=empty]
+
+	OperatingSystem[label = "{OperatingSystem|name : String|}"]
+	Admin[label="{Admin||}"]
+}

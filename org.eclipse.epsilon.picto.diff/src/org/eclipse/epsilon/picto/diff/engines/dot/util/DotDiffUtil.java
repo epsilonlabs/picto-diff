@@ -14,7 +14,7 @@ import guru.nidi.graphviz.model.MutableGraph;
 import guru.nidi.graphviz.model.MutableNode;
 import guru.nidi.graphviz.parse.Parser;
 
-public class PictoDiffUtil {
+public class DotDiffUtil {
 
 	public static void removeNode(MutableGraph graph, MutableNode node) {
 		graph.rootNodes().remove(node);
@@ -150,12 +150,13 @@ public class PictoDiffUtil {
 	
 	public static void paintRed(Link link) {
 		link.attrs().add("color", "red");
-		link.attrs().add("style", "dashed");
+		//		link.attrs().add("style", "dashed");
 		link.attrs().add("fontcolor", "red");
 	}
 	
 	public static void paintGreen(Link link) {
 		link.attrs().add("color", "green");
+		link.attrs().add("fontcolor", "green");
 	}
 	
 	public static void paintOrange(Link link) {
@@ -179,17 +180,17 @@ public class PictoDiffUtil {
 		InputStream dot1 = new FileInputStream("files/foo_.dot");
 	    MutableGraph g = new Parser().read(dot1);
 	    
-	    MutableNode node = PictoDiffUtil.getNodeRec(g, "n2");
-	    MutableNode node3 = PictoDiffUtil.getNodeRec(g, "n3");
-	    MutableNode node4 = PictoDiffUtil.getNodeRec(g, "n4");
-	    PictoDiffUtil.paintRed(node.links().get(0));
-	    PictoDiffUtil.paintRed(node);
-	    PictoDiffUtil.paintLabelRed(node);
-	    PictoDiffUtil.paintOrange(node3);
-	    PictoDiffUtil.paintGreen(node4);
+	    MutableNode node = DotDiffUtil.getNodeRec(g, "n2");
+	    MutableNode node3 = DotDiffUtil.getNodeRec(g, "n3");
+	    MutableNode node4 = DotDiffUtil.getNodeRec(g, "n4");
+	    DotDiffUtil.paintRed(node.links().get(0));
+	    DotDiffUtil.paintRed(node);
+	    DotDiffUtil.paintLabelRed(node);
+	    DotDiffUtil.paintOrange(node3);
+	    DotDiffUtil.paintGreen(node4);
 	    
-	    PictoDiffUtil.linkCrossCluster(g, "n1",	"_n1");
-	    PictoDiffUtil.linkCrossCluster(g, "n2",	"_n2");
+	    DotDiffUtil.linkCrossCluster(g, "n1",	"_n1");
+	    DotDiffUtil.linkCrossCluster(g, "n2",	"_n2");
 	    //n.addLink(n2);
 //	    Link l = n.linkTo(n2);
 //	    System.out.println(l);

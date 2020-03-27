@@ -9,17 +9,19 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.epsilon.picto.StringContentPromise;
 import org.eclipse.epsilon.picto.ViewTree;
 import org.eclipse.epsilon.picto.diff.PictoDiffPlugin;
 import org.eclipse.epsilon.picto.diff.engines.DiffEngine;
-import org.eclipse.epsilon.picto.diff.engines.dot.util.PictoDiffIDUtil;
-import org.eclipse.epsilon.picto.diff.engines.dot.util.PictoDiffUtil;
+import org.eclipse.epsilon.picto.diff.engines.dot.util.DotDiffIdUtil;
+import org.eclipse.epsilon.picto.diff.engines.dot.util.DotDiffUtil;
 import org.eclipse.epsilon.picto.diff.engines.dot.util.PictoDiffValidator;
 
 import guru.nidi.graphviz.engine.Format;
@@ -45,7 +47,7 @@ public class DotDiffEngine implements DiffEngine {
 	
 	protected HashSet<MutableNode> changedNodes = new HashSet<MutableNode>();
 	protected HashSet<MutableNode> unchangedNodes = new HashSet<MutableNode>();
-	protected HashSet<MutableNode> added3dNodes = new HashSet<MutableNode>();
+	protected HashSet<MutableNode> addedNodes = new HashSet<MutableNode>();
 	protected HashSet<MutableNode> removedNodes = new HashSet<MutableNode>();
 	
 	protected HashMap<MutableNode, HashSet<Link>> unchangedLinks = new HashMap<MutableNode, HashSet<Link>>();
@@ -85,14 +87,14 @@ public class DotDiffEngine implements DiffEngine {
 				source_temp = mutGraph();
 				source_temp.setDirected(true);
 				source_temp.setName("left");
-				source_temp.graphAttrs().add("label", "digraph");
+				source_temp.graphAttrs().add("label", "Previous Version");
 				source_temp.setCluster(true);
 				source_temp.addTo(result);
 				
 				target_temp = mutGraph();
 				target_temp.setDirected(true);
 				target_temp.setName("right");
-				target_temp.graphAttrs().add("label", "digraph++");
+				target_temp.graphAttrs().add("label", "Current Version");
 				target_temp.setCluster(true);
 				target_temp.addTo(result);
 			}
@@ -105,6 +107,10 @@ public class DotDiffEngine implements DiffEngine {
 	}
 	
 	public void compare() {
+		detectAddedNodes();
+		for (MutableNode n : addedNodes) {
+			addNodeToTargetTemp(n, ADD_MODE.ADDED);
+		}
 		for(MutableNode n: getUnmutableSourceNodes()) {
 			compareNode(n);
 		}
@@ -113,13 +119,28 @@ public class DotDiffEngine implements DiffEngine {
 		}
 	}
 	
+	private void detectAddedNodes() {
+		Set<MutableNode> sourceNodes = getUnmutableSourceNodes();
+		for (MutableNode targetNode : getUnmutableTargetNodes()) {
+			boolean found = false;
+			for (MutableNode sourceNode : sourceNodes) {
+				if (equalsByName(targetNode, sourceNode)) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				addedNodes.add(targetNode);
+			}
+		}
+	}
+
 	public void compareNode(MutableNode left_node) {
 		//get counter part node
-		MutableNode right_node = findNode(left_node.name().value());
+		MutableNode right_node = findNode(left_node, context.getTargetGraph().nodes());
 		//if node exists
 		if (right_node != null) {
-			//TODO: record each change in attr
-			
+
 			//compare all attributes
 			for(Entry<String, Object> attr: left_node.attrs()) {
 				compareAttribute(left_node, right_node, attr);
@@ -130,22 +151,22 @@ public class DotDiffEngine implements DiffEngine {
 				//paint orange for changed attributes
 				for(String s: getChangedAttrs(right_node)) {
 					if (s.equals("label")) {
-						PictoDiffUtil.paintLabelOrange(right_node);
+						DotDiffUtil.paintLabelOrange(right_node);
 					}
 					else {
-						PictoDiffUtil.paintOrange(right_node);
+						DotDiffUtil.paintOrange(right_node);
 					}
 				}
-				/*
-				 * The following is done because in this nidi3 library adding a node = adding all its links and the targets of the links recursively
-				 * So a copy of the node is made 
-				 */
+				// In this nidi3 library adding a node = adding
+				// all its links and the targets of the links recursively
+				// A copy of the node is made in the following methods to avoid that
+
+				// add left node (to compare original with changes)
 				addNodeToSourceTemp(left_node);
 				
-				//right node copy
+				// right node copy (modified version)
 				addNodeToTargetTemp(right_node, ADD_MODE.CHANGED);
 			}
-			
 			
 			//compare all links of the left node
 			for(Link left_link: left_node.links()) {
@@ -201,14 +222,14 @@ public class DotDiffEngine implements DiffEngine {
 				MutableNode temp = addNodeToTargetTemp(link_target, ADD_MODE.NORMAL);
 
 				//add the source to the right temp graph too
-				MutableNode link_source = findNodeInTargetTemp(PictoDiffIDUtil.getPrefix() + right_node.name().toString());
+				MutableNode link_source = findNodeInTargetTemp(DotDiffIdUtil.getPrefix() + right_node.name().toString());
 				if (link_source == null) {
 					link_source = addNodeToTargetTemp(left_node, ADD_MODE.NORMAL);
 				}
 				
 				Link right_link = linkCrossCluster(target_temp, link_source.name().toString(), temp.name().toString());
 				right_link.attrs().add(changed_link.copy());
-				PictoDiffUtil.paintOrange(right_link);
+				DotDiffUtil.paintOrange(right_link);
 				
 //				Link link = link_source.linkTo(temp);
 //				link.attrs().add(changed_link.copy());
@@ -224,9 +245,7 @@ public class DotDiffEngine implements DiffEngine {
 				MutableNode left_node_copy = left_node.copy();
 				addNodeToSourceTemp(left_node);
 
-				
 				MutableNode left_link_target = findLinkTarget(context.getSourceGraph(), removed_link);
-				MutableNode left_temp = addNodeToSourceTemp(left_link_target);
 
 				MutableNode left_link_source = findNodeInSourceTemp(left_node_copy.name().toString());
 				
@@ -246,7 +265,7 @@ public class DotDiffEngine implements DiffEngine {
 					
 					Link right_link = linkCrossCluster(target_temp, r_link_source.name().toString(), right_temp.name().toString());
 					right_link.attrs().add(removed_link.copy());
-					PictoDiffUtil.paintRed(right_link);
+					DotDiffUtil.paintRed(right_link);
 
 
 				}
@@ -258,52 +277,79 @@ public class DotDiffEngine implements DiffEngine {
 					
 					Link right_link = linkCrossCluster(target_temp, r_link_source.name().toString(), right_temp.name().toString());
 					right_link.attrs().add(removed_link.copy());
-					PictoDiffUtil.paintRed(right_link);
+					DotDiffUtil.paintRed(right_link);
 				}
 			}
 			
 			/*
 			 * below handles added links
 			 */
-			//get right node copy
+
+			// get right node copy and remove changed and unchanged links
 			MutableNode right_node_copy = right_node.copy();
-			//remove changed and unchanged links
 			right_node_copy.links().removeAll(getChangedLinks(right_node));
 			right_node_copy.links().removeAll(getUnchangedLinks(right_node));
 			
-			//for each link in the right node copy - they are added ones
+			// each link remaining in the right node copy is an added one
 			for(Link right_link: right_node_copy.links()) {
-				MutableNode link_target = findLinkTarget(context.getTargetGraph(), right_link);
-				MutableNode temp = addNodeToTargetTemp(link_target, ADD_MODE.NORMAL);
-				MutableNode link_source = findNodeInTargetTemp(PictoDiffIDUtil.getPrefix() + right_node.name().toString());
-				if (link_source == null) {
-					link_source = addNodeToTargetTemp(right_node, ADD_MODE.NORMAL);
+				MutableNode linkSource = findLinkSource(context.getTargetGraph(), right_link);
+				MutableNode linkSource_targetTemp =
+						findNodeInTargetTemp(DotDiffIdUtil.getPrefix() + linkSource.name().value());
+				if (linkSource_targetTemp == null) {
+					linkSource_targetTemp = addNodeToTargetTemp(linkSource, ADD_MODE.NORMAL);
 				}
-				
-				Link link = linkCrossCluster(target_temp, link_source.name().toString(), temp.name().toString());
-				right_link.attrs().add(link.copy());
-				PictoDiffUtil.paintRed(link);
-			}		
-			
+				MutableNode linkTarget = findLinkTarget(context.getTargetGraph(), right_link);
+				MutableNode linkTarget_targetTemp =
+						findNodeInTargetTemp(DotDiffIdUtil.getPrefix() + linkTarget.name().value());
+				if (linkTarget_targetTemp == null) {
+					linkTarget_targetTemp = addNodeToTargetTemp(linkTarget, ADD_MODE.NORMAL);
+				}
+
+				Link link = linkCrossCluster(target_temp, linkSource_targetTemp.name().value(), linkTarget_targetTemp.name().value());
+				copyLinkAttributes(link, right_link);
+				DotDiffUtil.paintGreen(link);
+
+				// for the added link, add nodes that existed in previous version to the view
+				if (findNode(linkSource, addedNodes) == null) {
+					MutableNode linkSource_sourceTemp = findNodeInSourceTemp(linkSource.name().value());
+					if (linkSource_sourceTemp == null) {
+						addNodeToSourceTemp(linkSource);
+					}
+				}
+				if (findNode(linkTarget, addedNodes) == null) {
+					MutableNode linkTarget_sourceTemp = findNodeInSourceTemp(linkTarget.name().value());
+					if (linkTarget_sourceTemp == null) {
+						addNodeToSourceTemp(linkTarget);
+					}
+				}
+			}
+
 			//remove left node and right node from their graphs (to reduce memory footprint)
+			// (fonso) this only removes them if they are root nodes.
+			//         is this removal dangerous for some strange cases?
 			getSourceNodes().remove(left_node);
 			getTargetNodes().remove(right_node);
 		}
 		else {
 			// if node is deleted
-			addRemovedNode(left_node);
+			addRemovedNode(left_node); // (fonso) right now, not necessary
 			addNodeToSourceTemp(left_node);
 			
 			addNodeToTargetTemp(left_node, ADD_MODE.REMOVED);
-			getSourceNodes().remove(left_node);
-
+			getSourceNodes().remove(left_node); // (fonso) related with removes above: is this dangerous?
 		}
 	}
 	
+	private void copyLinkAttributes(Link leftLink, Link rightLink) {
+		for(Entry<String, Object> attr : rightLink.attrs()) {
+			leftLink.attrs().add(attr.getKey(), attr.getValue());
+		}
+	}
+
 	public void compareAttribute(MutableNode source, MutableNode target, Entry<String, Object> attribute) {
 		Entry<String, Object> correspond = findAttribute(target, attribute.getKey());
 		
-		//if attr does not exhist - attr is removed
+		// if attr does not exist - attr is removed
 		if (correspond == null) {
 			addRemovedAttr(source, attribute.getKey());
 		}
@@ -340,16 +386,16 @@ public class DotDiffEngine implements DiffEngine {
 	
 	public MutableNode addNodeToTargetTemp(MutableNode node, ADD_MODE mode) {
 		MutableNode copy = getNodeCopy(node);
-		PictoDiffIDUtil.prefixNode(copy);
+		DotDiffIdUtil.prefixNode(copy);
 		MutableGraph g = mutGraph();
 		if (mode == ADD_MODE.ADDED) {
-			PictoDiffUtil.paintGreen(g);
+			DotDiffUtil.paintGreen(g);
 		}
 		else if (mode == ADD_MODE.CHANGED) {
-			PictoDiffUtil.paintOrange(g);
+			DotDiffUtil.paintOrange(g);
 		}
 		else if (mode == ADD_MODE.REMOVED) {
-			PictoDiffUtil.paintRed(g);
+			DotDiffUtil.paintRed(g);
 		}
 		else {
 			
@@ -437,12 +483,14 @@ public class DotDiffEngine implements DiffEngine {
 		}
 		return result;
 	}
-	
 
-	
-	public MutableNode findNode(String name) {
-		for(MutableNode n: context.getTargetGraph().nodes()) {
-			if (n.name().value().equals(name)) {
+	private boolean equalsByName(MutableNode left, MutableNode right) {
+		return left.name().value().equals(right.name().value());
+	}
+
+	public MutableNode findNode(MutableNode node, Collection<MutableNode> nodeCollection) {
+		for(MutableNode n: nodeCollection) {
+			if (equalsByName(node, n)) {
 				return n;
 			}
 		}
@@ -458,7 +506,27 @@ public class DotDiffEngine implements DiffEngine {
 		}
 		return null;
 	}
-	
+
+	public MutableNode findLinkSource(MutableGraph graph, Link link) {
+		String name = "";
+		// obtain name for the target
+		if (link.from() instanceof PortNode) {
+			PortNode portNode = (PortNode) link.from();
+			name = portNode.name().toString();
+		}
+		else if (link.from() instanceof MutableNode) {
+			MutableNode mutableNode = (MutableNode) link.from();
+			name = mutableNode.name().toString();
+		}
+		// get the node in the graph by name
+		for (MutableNode node : graph.nodes()) {
+			if (node.name().toString().equals(name)) {
+				return node;
+			}
+		}
+		return null;
+	}
+
 	public MutableNode findLinkTarget(MutableGraph graph, Link link) {
 		String name = "";
 		//obtain name for the target
@@ -470,16 +538,15 @@ public class DotDiffEngine implements DiffEngine {
 			MutableNode mutableNode = (MutableNode) link.to();
 			name = mutableNode.name().toString();
 		}
-		
 		//get the node in the graph by name
-		for(MutableNode node: graph.nodes()) {
+		for (MutableNode node : graph.nodes()) {
 			if (node.name().toString().equals(name)) {
 				return node;
 			}
 		}
 		return null;
 	}
-	
+
 	public Entry<String, Object> findAttribute(MutableNode node, String key) {
 		for(Entry<String, Object> attr: node.attrs()) {
 			if (attr.getKey().equals(key)) {
@@ -493,7 +560,6 @@ public class DotDiffEngine implements DiffEngine {
 		removedNodes.add(node);
 	}
 
-	
 	private void addUnchangedLink(MutableNode node, Link link) {
 		HashSet<Link> links = unchangedLinks.get(node);
 		if (links == null) {
@@ -672,13 +738,13 @@ public class DotDiffEngine implements DiffEngine {
 					if (n.name().toString().equals(from)) {
 						source = g;
 					}
-					else if (n.name().toString().equals(to)) {
+					if (n.name().toString().equals(to)) {
 						target = g;
 					}
 				}
 			}
 			source.addLink(target);
-			Link link = source.links().get(0);
+			Link link = source.links().get(source.links().size() - 1);
 			return link;
 		}
 		else {

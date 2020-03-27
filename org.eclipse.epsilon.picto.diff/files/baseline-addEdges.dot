@@ -1,0 +1,10 @@
+digraph G {
+	node[shape=record]
+	edge[dir=back, arrowtail=empty]
+
+	OperatingSystem[label = "{OperatingSystem||}"]
+	Admin[label="{Admin||}"]
+
+	OperatingSystem->OperatingSystem[label=" virtualMachines* ",arrowtail=diamond, name="e4"];
+	OperatingSystem->Admin[label=" admins* ", dir=forward, arrowhead = vee, name="e5"];
+}
