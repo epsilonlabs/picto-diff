@@ -1,4 +1,6 @@
 digraph G {
+	// new "name" property to OperatingSystem
+	
 	node[shape=record]
 	edge[dir=back, arrowtail=empty]
 

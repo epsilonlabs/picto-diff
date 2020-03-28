@@ -1,4 +1,6 @@
 digraph G {
+	// add filesystem node and edge
+
 	node[shape=record]
 	edge[dir=back, arrowtail=empty]
 

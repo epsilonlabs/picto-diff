@@ -1,4 +1,7 @@
 digraph G {
+	// windows antivirus points to new criptominer
+	// new systemUpdates attacks windows (as always)
+
 	node[shape=record]
 	edge[dir=back, arrowtail=empty]
 

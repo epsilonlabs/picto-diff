@@ -1,4 +1,6 @@
 digraph G {
+	// add virtualMachines and admins edges
+
 	node[shape=record]
 	edge[dir=back, arrowtail=empty]
 

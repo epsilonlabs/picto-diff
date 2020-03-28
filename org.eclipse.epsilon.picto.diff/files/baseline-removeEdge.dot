@@ -1,4 +1,6 @@
 digraph G {
+	// remove windows inheritance and antivirus attacks spyware one (has label)
+
 	node[shape=record]
 	edge[dir=back, arrowtail=empty]
 
@@ -15,7 +17,6 @@ digraph G {
 	OperatingSystem->OS_X[name="h2"];
 	OperatingSystem->FreeBSD[name="h3"];
 	Windows->Antivirus[label=" antivirus ", dir=forward, arrowhead = vee, name="antivirus"];
-	Antivirus->Spyware[label=" attacks ", dir=forward, arrowhead = vee, name="attacks"];
 	Distribution[label = "{Distribution||}"]
 	GNU_Linux->Distribution[label=" distribution ", dir=forward, arrowhead = vee, name="eDistr"];
 }

@@ -1,4 +1,6 @@
 digraph G {
+	// remove windows and admin
+
 	node[shape=record]
 	edge[dir=back, arrowtail=empty]
 

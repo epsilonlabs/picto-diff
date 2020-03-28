@@ -1,4 +1,7 @@
 digraph G {
+	// windows inheritance
+	// windows antivirus
+
 	node[shape=record]
 	edge[dir=back, arrowtail=empty]
 
