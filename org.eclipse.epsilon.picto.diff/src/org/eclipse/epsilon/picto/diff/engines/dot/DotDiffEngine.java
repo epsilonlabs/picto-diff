@@ -240,43 +240,65 @@ public class DotDiffEngine implements DiffEngine {
 			//for all removed links
 			for(Link removed_link: getRemovedLinks(left_node)) {
 				/*
-				 * deal with the left node
+				 * add affected nodes and link to the left graph
 				 */
-				MutableNode left_node_copy = left_node.copy();
-				addNodeToSourceTemp(left_node);
+				MutableNode leftLinkSource_sourceTemp = findNodeInSourceTemp(
+						DotDiffIdUtil.getPrefix() + left_node.name().value());
+				if (leftLinkSource_sourceTemp == null) {
+					leftLinkSource_sourceTemp = addNodeToSourceTemp(left_node);
+				}
 
-				MutableNode left_link_target = findLinkTarget(context.getSourceGraph(), removed_link);
-
-				MutableNode left_link_source = findNodeInSourceTemp(left_node_copy.name().toString());
+				MutableNode leftLinkTarget = findLinkTarget(context.getSourceGraph(), removed_link);
+				MutableNode leftLinkTarget_sourceTemp = findNodeInSourceTemp(leftLinkTarget.name().value());
+				if (leftLinkTarget_sourceTemp == null) {
+					leftLinkTarget_sourceTemp = addNodeToSourceTemp(leftLinkTarget);
+				}
 				
-				Link left_link = linkCrossCluster(source_temp, left_link_source.name().toString(), left_link_target.name().toString());
-				left_link.attrs().add(removed_link.copy());
-				//////////////////////////////////////////
+				Link left_link = linkCrossCluster(
+						source_temp,
+						leftLinkSource_sourceTemp.name().value(),
+						leftLinkTarget_sourceTemp.name().value());
+				copyLinkAttributes(left_link, removed_link);
+
 				/*
-				 * deal with the right node
+				 * deal with the right graph (a bit harder depending on other changes)
 				 */
 				
-				MutableNode right_node_copy = addNodeToTargetTemp(right_node, ADD_MODE.NORMAL);
+				MutableNode rightNode_targetTemp = findNodeInTargetTemp(
+						DotDiffIdUtil.getPrefix() + right_node.name().value());
+				if (rightNode_targetTemp == null) {
+					rightNode_targetTemp = addNodeToTargetTemp(right_node, ADD_MODE.NORMAL);
+				}
 				
-				MutableNode right_link_target = findLinkTarget(context.getTargetGraph(), removed_link);
-				if (right_link_target != null) {
-					MutableNode right_temp = addNodeToTargetTemp(right_link_target, ADD_MODE.NORMAL);
-					MutableNode r_link_source = findNodeInTargetTemp(right_node_copy.name().toString());
-					
-					Link right_link = linkCrossCluster(target_temp, r_link_source.name().toString(), right_temp.name().toString());
-					right_link.attrs().add(removed_link.copy());
+				MutableNode rightLinkTarget = findLinkTarget(context.getTargetGraph(), removed_link);
+				// the target of the removed link could have also been removed
+				if (rightLinkTarget != null) {
+					MutableNode rightLinkTarget_targetTemp = findNodeInTargetTemp(
+							DotDiffIdUtil.getPrefix() + rightLinkTarget.name().value());
+					if (rightLinkTarget_targetTemp == null) {
+						rightLinkTarget_targetTemp =
+								addNodeToTargetTemp(rightLinkTarget, ADD_MODE.NORMAL); // and if it is changed because of other things?
+					}
+
+					// the source of this link is rightNode (in targetTemp graph)
+					Link right_link = linkCrossCluster(
+							target_temp,
+							rightNode_targetTemp.name().value(),
+							rightLinkTarget_targetTemp.name().value());
+					copyLinkAttributes(right_link, removed_link);
 					DotDiffUtil.paintRed(right_link);
-
-
 				}
 				else {
-					right_link_target = findLinkTarget(context.getSourceGraph(), removed_link);
-					MutableNode right_temp = addNodeToTargetTemp(right_link_target, ADD_MODE.NORMAL);
+					rightLinkTarget = findLinkTarget(context.getSourceGraph(), removed_link);
+					MutableNode rightLinkTarget_targetTemp =
+							addNodeToTargetTemp(rightLinkTarget, ADD_MODE.NORMAL); //removed style?
 
-					MutableNode r_link_source = findNodeInTargetTemp(right_node_copy.name().toString());
-					
-					Link right_link = linkCrossCluster(target_temp, r_link_source.name().toString(), right_temp.name().toString());
-					right_link.attrs().add(removed_link.copy());
+					// the source of this link is rightNode (in targetTemp graph)
+					Link right_link = linkCrossCluster(
+							target_temp,
+							rightNode_targetTemp.name().toString(),
+							rightLinkTarget_targetTemp.name().toString());
+					copyLinkAttributes(right_link, removed_link);
 					DotDiffUtil.paintRed(right_link);
 				}
 			}
@@ -340,6 +362,8 @@ public class DotDiffEngine implements DiffEngine {
 		}
 	}
 	
+	// TODO: should we be careful here about not copying the same edge name
+	//   multiple times into the same graph?
 	private void copyLinkAttributes(Link leftLink, Link rightLink) {
 		for(Entry<String, Object> attr : rightLink.attrs()) {
 			leftLink.attrs().add(attr.getKey(), attr.getValue());
