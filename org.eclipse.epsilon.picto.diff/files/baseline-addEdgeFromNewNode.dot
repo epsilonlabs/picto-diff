@@ -1,8 +1,5 @@
 digraph G {
-	// windows inheritance
-	// windows antivirus
-	// osx inheritance
-	// gnu_linux "distribution" reference renamed to "distro"
+	// add terminal to gnu_linus
 
 	node[shape=record]
 	edge[dir=back, arrowtail=empty]
@@ -17,11 +14,14 @@ digraph G {
 	Antivirus[label = "{Antivirus||}"]
 	Spyware[label = "{Spyware||}"]
 	OperatingSystem->GNU_Linux[name="h1"];
-	FreeBSD->OS_X[name="h2"];
+	OperatingSystem->OS_X[name="h2"];
 	OperatingSystem->FreeBSD[name="h3"];
-	Spyware->Windows[name="h4"];
-	Windows->Spyware[label=" antivirus ", dir=forward, arrowhead = vee, name="antivirus"];
+	OperatingSystem->Windows[name="h4"];
+	Windows->Antivirus[label=" antivirus ", dir=forward, arrowhead = vee, name="antivirus"];
 	Antivirus->Spyware[label=" attacks ", dir=forward, arrowhead = vee, name="attacks"];
 	Distribution[label = "{Distribution||}"]
-	GNU_Linux->Distribution[label=" distro ", dir=forward, arrowhead = vee, name="eDistr"];
+	GNU_Linux->Distribution[label=" distribution ", dir=forward, arrowhead = vee, name="eDistr"];
+
+	Terminal[label = "{Terminal||}"]
+	Terminal->GNU_Linux[label=" availableIn ", dir=forward, arrowhead=vee, name="term"];
 }

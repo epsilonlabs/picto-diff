@@ -111,14 +111,52 @@ public class DotDiffEngine implements DiffEngine {
 		for (MutableNode n : addedNodes) {
 			addNodeToTargetTemp(n, ADD_MODE.ADDED);
 		}
-		for(MutableNode n: getUnmutableSourceNodes()) {
+		for (MutableNode n : getUnmutableSourceNodes()) {
 			compareNode(n);
 		}
 		if (getUnmutableSourceNodes().size() != 0) {
 			addFeedback("unmutable source nodes > 0, something is wrong");
 		}
+		// add new links of newly added nodes (e.g. links where the source is
+		//   an added node). Done after the general comparison to be sure that
+		//   any other change over the already existing nodes is treated first
+		includeAddedNodesLinks();
 	}
 	
+	private void includeAddedNodesLinks() {
+		for (MutableNode addedNode : addedNodes) {
+			MutableNode addedNode_targetTemp =
+					findNodeInTargetTemp(DotDiffIdUtil.getPrefix() + addedNode.name().toString());
+			for (Link addedLink : addedNode.links()) {
+				MutableNode linkTarget =
+						findLinkTarget(context.getTargetGraph(), addedLink);
+				// add referenced elements to sourceTemp (if they are not new too)
+				// TODO: is this necessary / wanted?
+				if (findNode(linkTarget, addedNodes) == null) {
+					MutableNode linkTarget_sourceTemp =
+							findNodeInSourceTemp(linkTarget.name().value());
+					if (linkTarget_sourceTemp == null) {
+						addNodeToSourceTemp(linkTarget);
+					}
+				}
+				// add referenced elements to target temp
+				MutableNode linkTarget_targetTemp =
+						findNodeInSourceTemp(DotDiffIdUtil.getPrefix() + linkTarget.name().value());
+				if (linkTarget_targetTemp == null) {
+					linkTarget_targetTemp = addNodeToTargetTemp(linkTarget, ADD_MODE.NORMAL);
+				}
+				Link link = linkCrossCluster(
+						target_temp,
+						addedNode_targetTemp.name().toString(),
+						linkTarget_targetTemp.name().toString());
+
+				copyLinkAttributes(link, addedLink);
+				DotDiffUtil.paintGreen(link);
+
+			}
+		}
+	}
+
 	private void detectAddedNodes() {
 		Set<MutableNode> sourceNodes = getUnmutableSourceNodes();
 		for (MutableNode targetNode : getUnmutableTargetNodes()) {
@@ -191,50 +229,53 @@ public class DotDiffEngine implements DiffEngine {
 			}
 			
 			//for all changed links for the left node
-			for(Link changed_link: getChangedLinks(left_node))
-			{
+			for (Link changed_link : getChangedLinks(left_node)) {
 				//find the link target
-				MutableNode link_target = findLinkTarget(context.getSourceGraph(), changed_link);
-				
-				MutableNode temp = addNodeToSourceTemp(link_target);
-				//get link source
-				MutableNode link_source = findNodeInSourceTemp(left_node.name().toString());
-				//if cannot find link source, make a copy of the left node, add it to left
-				if (link_source == null) {
-					link_source = addNodeToSourceTemp(left_node);
+				MutableNode linkTarget = findLinkTarget(context.getSourceGraph(), changed_link);
+				MutableNode linkTarget_sourceTemp =
+						findNodeInSourceTemp(linkTarget.name().value());
+				if (linkTarget_sourceTemp == null) {
+					linkTarget_sourceTemp = addNodeToSourceTemp(linkTarget);
+				}
+				// the link source is current left node
+				MutableNode linkSource_sourceTemp =
+						findNodeInSourceTemp(left_node.name().value());
+				if (linkSource_sourceTemp == null) {
+					linkSource_sourceTemp = addNodeToSourceTemp(left_node);
 				}
 				
-				Link right_link = linkCrossCluster(target_temp, link_source.name().toString(), temp.name().toString());
-				right_link.attrs().add(changed_link.copy());
-
-				//establish link
-//				Link link = link_source.linkTo(temp);
-//				link.attrs().add(changed_link.copy());
-//				link_source.addLink(link);
+				Link right_link = linkCrossCluster(
+						source_temp,
+						linkSource_sourceTemp.name().toString(),
+						linkTarget_sourceTemp.name().toString());
+				copyLinkAttributes(right_link, changed_link);
 			}
 			
 			
 			//for all changed links for the right node
-			for(Link changed_link: getChangedLinks(right_node))
-			{
-				//find target and addit to the right temp graph
-				MutableNode link_target = findLinkTarget(context.getTargetGraph(), changed_link);
-				MutableNode temp = addNodeToTargetTemp(link_target, ADD_MODE.NORMAL);
+			for (Link changed_link : getChangedLinks(right_node)) {
+				//find target and add it to the right temp graph
+				MutableNode linkTarget = findLinkTarget(context.getTargetGraph(), changed_link);
 
-				//add the source to the right temp graph too
-				MutableNode link_source = findNodeInTargetTemp(DotDiffIdUtil.getPrefix() + right_node.name().toString());
-				if (link_source == null) {
-					link_source = addNodeToTargetTemp(left_node, ADD_MODE.NORMAL);
+				MutableNode linkTarget_targetTemp =
+						findNodeInTargetTemp(DotDiffIdUtil.getPrefix() + linkTarget.name().value());
+				if (linkTarget_targetTemp == null) {
+					linkTarget_targetTemp = addNodeToTargetTemp(linkTarget, ADD_MODE.NORMAL);
+				}
+				//add the source to the right temp graph too (i.e. right_node)
+				MutableNode linkSource_targetTemp =
+						findNodeInTargetTemp(DotDiffIdUtil.getPrefix() + right_node.name().toString());
+				if (linkSource_targetTemp == null) {
+					linkSource_targetTemp = addNodeToTargetTemp(left_node, ADD_MODE.NORMAL);
 				}
 				
-				Link right_link = linkCrossCluster(target_temp, link_source.name().toString(), temp.name().toString());
-				right_link.attrs().add(changed_link.copy());
+				Link right_link = linkCrossCluster(
+						target_temp,
+						linkSource_targetTemp.name().toString(),
+						linkTarget_targetTemp.name().toString());
+
+				copyLinkAttributes(right_link, changed_link);
 				DotDiffUtil.paintOrange(right_link);
-				
-//				Link link = link_source.linkTo(temp);
-//				link.attrs().add(changed_link.copy());
-//				GraphUtil.paintOrange(link);
-//				link_source.addLink(link);
 			}
 			
 			//for all removed links
@@ -242,8 +283,7 @@ public class DotDiffEngine implements DiffEngine {
 				/*
 				 * add affected nodes and link to the left graph
 				 */
-				MutableNode leftLinkSource_sourceTemp = findNodeInSourceTemp(
-						DotDiffIdUtil.getPrefix() + left_node.name().value());
+				MutableNode leftLinkSource_sourceTemp = findNodeInSourceTemp(left_node.name().value());
 				if (leftLinkSource_sourceTemp == null) {
 					leftLinkSource_sourceTemp = addNodeToSourceTemp(left_node);
 				}
