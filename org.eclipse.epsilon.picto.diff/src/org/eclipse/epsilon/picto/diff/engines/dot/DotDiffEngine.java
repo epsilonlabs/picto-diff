@@ -4,14 +4,16 @@ import static guru.nidi.graphviz.model.Factory.mutGraph;
 import static guru.nidi.graphviz.model.Factory.mutNode;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -60,16 +62,63 @@ public class DotDiffEngine implements DiffEngine {
 	protected HashMap<MutableNode, HashSet<String>> changedAttrs = new HashMap<MutableNode, HashSet<String>>();
 	protected HashMap<MutableNode, HashSet<String>> unchangedAttrs = new HashMap<MutableNode, HashSet<String>>();
 	
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Exception {
 
-		DotDiffContext context = new DotDiffContext(
-				new FileInputStream("files/simple_filesystem.dot"),
-				new FileInputStream("files/simple_filesystem2.dot"));
-		DotDiffEngine comparisonEngine = new DotDiffEngine(context);
-	    comparisonEngine.load();
-		context.setSerialiseOptions("example/result_1.svg", "example/result_1.dot");
-	    comparisonEngine.compare();
-	    comparisonEngine.serialise();
+		String filesLocationFormat = "files/%s";
+		String outputFolder = "diffResult";
+		String outputLocationFormat = outputFolder + "/%s-diffResult.html";
+
+		File directory = new File(outputFolder);
+		if (!directory.exists()) {
+			directory.mkdirs();
+		}
+
+		String baselineDot = new String(
+				Files.readAllBytes(Paths.get(String.format(filesLocationFormat, "baseline.dot"))));
+		ViewTree baselineView = new ViewTree();
+		baselineView.setPromise(new StringContentPromise(baselineDot));
+		baselineView.setFormat("graphviz-dot");
+
+		List<String> modifiedFiles = Arrays.asList(
+				"baseline-addProperty.dot",
+				"baseline-addNode.dot",
+				"baseline-addEdges.dot",
+				"baseline-addEdgeFromNewNode.dot",
+				"baseline-addEdgeToNewNode.dot",
+				"baseline-removeNodes.dot",
+				"baseline-removeEdge.dot",
+				"baseline-modifyEdges.dot",
+				"baseline-modifyEdgesToNewNodes.dot",
+				"baseline-addEdgesToChangedNodes.dot");
+
+		//		modifiedFiles = Arrays.asList("baseline-addEdgesToChangedNodes.dot");
+
+		for (String file : modifiedFiles) {
+
+			String modifiedFile = String.format(filesLocationFormat, file);
+			String modifiedDot = new String(Files.readAllBytes(Paths.get(modifiedFile)));
+
+			ViewTree modifiedView = new ViewTree();
+			modifiedView.setFormat("graphviz-dot");
+			modifiedView.setPromise(new StringContentPromise(modifiedDot));
+
+			ViewTree diffView = new ViewTree();
+			DotDiffContext context = new DotDiffContext(baselineDot, modifiedDot);
+			DotDiffEngine engine = new DotDiffEngine(context);
+			try {
+				engine.diff(diffView, baselineView, modifiedView);
+				Files.write(Paths.get(String.format(outputLocationFormat, file)),
+						diffView.getPromise().getContent().getBytes(),
+						StandardOpenOption.CREATE,
+						StandardOpenOption.WRITE,
+						StandardOpenOption.TRUNCATE_EXISTING);
+			}
+			catch (Exception ex) {
+				System.out.println("-----------------------------------------");
+				System.out.println(String.format("Modified file %s fails", file));
+				ex.printStackTrace();
+			}
+		}
 	}
 
 	public DotDiffEngine() {
@@ -716,6 +765,7 @@ public class DotDiffEngine implements DiffEngine {
 	}
 
 	// (fonso): maintained in case that fine-grain treatment of attrs is improved
+	@SuppressWarnings("unused")
 	private void addAddedAttr(MutableNode node, String attr) {
 		HashSet<String> attrs = addedAttrs.get(node);
 		if (attrs == null) {
