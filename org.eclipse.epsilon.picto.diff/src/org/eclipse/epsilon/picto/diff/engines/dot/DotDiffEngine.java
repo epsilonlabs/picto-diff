@@ -141,7 +141,7 @@ public class DotDiffEngine implements DiffEngine {
 				}
 				// add referenced elements to target temp
 				MutableNode linkTarget_targetTemp =
-						findNodeInSourceTemp(DotDiffIdUtil.getPrefix() + linkTarget.name().value());
+						findNodeInTargetTemp(DotDiffIdUtil.getPrefix() + linkTarget.name().value());
 				if (linkTarget_targetTemp == null) {
 					linkTarget_targetTemp = addNodeToTargetTemp(linkTarget, ADD_MODE.NORMAL);
 				}
