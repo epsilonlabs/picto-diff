@@ -52,7 +52,11 @@ public class DotDiffIdUtil {
 	public static String prefix(String s) {
 		return PREFIX+s;
 	}
-	
+
+	public static String getPrefixedName(MutableNode node) {
+		return prefix(node.name().value());
+	}
+
 	public static void main(String[] args) throws IOException {
 		InputStream dot1 = new FileInputStream("files/foo.dot");
 	    MutableGraph g = new Parser().read(dot1);

@@ -126,8 +126,7 @@ public class DotDiffEngine implements DiffEngine {
 	private void includeAddedNodesLinks() {
 		for (MutableNode addedNode : addedNodes) {
 			// invariant: all added nodes are already in targetTemp graph, so just find
-			MutableNode addedNode_targetTemp =
-					findNodeInTargetTemp(DotDiffIdUtil.getPrefix() + addedNode.name().toString());
+			MutableNode addedNode_targetTemp = findNodeInTargetTemp(addedNode);
 			for (Link addedLink : addedNode.links()) {
 				MutableNode linkTarget =
 						findLinkTarget(context.getTargetGraph(), addedLink);
@@ -142,9 +141,7 @@ public class DotDiffEngine implements DiffEngine {
 						addIfNotFoundInTargetTemp(linkTarget, ADD_MODE.NORMAL);
 
 				Link link = linkCrossCluster(
-						target_temp,
-						addedNode_targetTemp.name().toString(),
-						linkTarget_targetTemp.name().toString());
+						target_temp, addedNode_targetTemp, linkTarget_targetTemp);
 				copyLinkAttributes(link, addedLink);
 				DotDiffUtil.paintGreen(link);
 			}
@@ -232,9 +229,7 @@ public class DotDiffEngine implements DiffEngine {
 				MutableNode linkSource_sourceTemp = addIfNotFoundInSourceTemp(left_node);
 				
 				Link right_link = linkCrossCluster(
-						source_temp,
-						linkSource_sourceTemp.name().toString(),
-						linkTarget_sourceTemp.name().toString());
+						source_temp, linkSource_sourceTemp, linkTarget_sourceTemp);
 				copyLinkAttributes(right_link, changed_link);
 			}
 			
@@ -248,9 +243,7 @@ public class DotDiffEngine implements DiffEngine {
 				MutableNode linkSource_targetTemp = addIfNotFoundInTargetTemp(right_node, ADD_MODE.NORMAL);
 
 				Link right_link = linkCrossCluster(
-						target_temp,
-						linkSource_targetTemp.name().toString(),
-						linkTarget_targetTemp.name().toString());
+						target_temp, linkSource_targetTemp, linkTarget_targetTemp);
 				copyLinkAttributes(right_link, changed_link);
 				DotDiffUtil.paintOrange(right_link);
 			}
@@ -266,9 +259,7 @@ public class DotDiffEngine implements DiffEngine {
 				MutableNode leftLinkTarget_sourceTemp = addIfNotFoundInSourceTemp(leftLinkTarget);
 
 				Link left_link = linkCrossCluster(
-						source_temp,
-						leftLinkSource_sourceTemp.name().value(),
-						leftLinkTarget_sourceTemp.name().value());
+						source_temp, leftLinkSource_sourceTemp, leftLinkTarget_sourceTemp);
 				copyLinkAttributes(left_link, removed_link);
 
 				/*
@@ -284,9 +275,7 @@ public class DotDiffEngine implements DiffEngine {
 
 					// the source of this link is rightNode (in targetTemp graph)
 					Link right_link = linkCrossCluster(
-							target_temp,
-							rightNode_targetTemp.name().value(),
-							rightLinkTarget_targetTemp.name().value());
+							target_temp, rightNode_targetTemp, rightLinkTarget_targetTemp);
 					copyLinkAttributes(right_link, removed_link);
 					DotDiffUtil.paintRed(right_link);
 				}
@@ -297,9 +286,7 @@ public class DotDiffEngine implements DiffEngine {
 
 					// the source of this link is rightNode (in targetTemp graph)
 					Link right_link = linkCrossCluster(
-							target_temp,
-							rightNode_targetTemp.name().toString(),
-							rightLinkTarget_targetTemp.name().toString());
+							target_temp, rightNode_targetTemp, rightLinkTarget_targetTemp);
 					copyLinkAttributes(right_link, removed_link);
 					DotDiffUtil.paintRed(right_link);
 				}
@@ -326,7 +313,8 @@ public class DotDiffEngine implements DiffEngine {
 				MutableNode linkTarget_targetTemp =
 						addIfNotFoundInTargetTemp(linkTarget, ADD_MODE.NORMAL);
 
-				Link link = linkCrossCluster(target_temp, linkSource_targetTemp.name().value(), linkTarget_targetTemp.name().value());
+				Link link = linkCrossCluster(
+						target_temp, linkSource_targetTemp, linkTarget_targetTemp);
 				copyLinkAttributes(link, right_link);
 				DotDiffUtil.paintGreen(link);
 
@@ -429,8 +417,7 @@ public class DotDiffEngine implements DiffEngine {
 	 * Add if not found in the sourceTemp graph
 	 */
 	public MutableNode addIfNotFoundInSourceTemp(MutableNode node) {
-		MutableNode node_sourceTemp =
-				findNodeInSourceTemp(node.name().value());
+		MutableNode node_sourceTemp = findNodeInSourceTemp(node);
 		if (node_sourceTemp == null) {
 			node_sourceTemp = addNodeToSourceTemp(node);
 		}
@@ -441,8 +428,7 @@ public class DotDiffEngine implements DiffEngine {
 	 * Add if not found in the targetTemp graph with the provided addition mode
 	 */
 	public MutableNode addIfNotFoundInTargetTemp(MutableNode node, ADD_MODE addMode) {
-		MutableNode node_targetTemp =
-				findNodeInTargetTemp(DotDiffIdUtil.getPrefix() + node.name().value());
+		MutableNode node_targetTemp = findNodeInTargetTemp(node);
 		if (node_targetTemp == null) {
 			node_targetTemp = addNodeToTargetTemp(node, addMode);
 		}
@@ -466,24 +452,23 @@ public class DotDiffEngine implements DiffEngine {
 		return (HashSet<MutableNode>) context.getTargetGraph().rootNodes();
 	}
 	
-	public MutableNode findNodeInSourceTemp(String name) {
-		for(MutableGraph g: source_temp.graphs())
-		{
-			for(MutableNode n: g.rootNodes()) {
-				if (n.name().toString().equals(name)) {
-					return n;
+	public MutableNode findNodeInSourceTemp(MutableNode node) {
+		for (MutableGraph g : source_temp.graphs()) {
+			for (MutableNode otherNode : g.rootNodes()) {
+				if (equalsByName(node, otherNode)) {
+					return otherNode;
 				}
 			}
 		}
 		return null;
 	}
 	
-	public MutableNode findNodeInTargetTemp(String name) {
-		for(MutableGraph g: target_temp.graphs())
-		{
-			for(MutableNode n: g.rootNodes()) {
-				if (n.name().toString().equals(name)) {
-					return n;
+	public MutableNode findNodeInTargetTemp(MutableNode node) {
+		String prefixedName = DotDiffIdUtil.getPrefixedName(node);
+		for (MutableGraph g : target_temp.graphs()) {
+			for(MutableNode otherNode: g.rootNodes()) {
+				if (otherNode.name().value().equals(prefixedName)) {
+					return otherNode;
 				}
 			}
 		}
@@ -766,7 +751,7 @@ public class DotDiffEngine implements DiffEngine {
 	    Graphviz.fromGraph(result).render(Format.SVG).toFile(file);
 	}
 	
-	private Link linkCrossCluster(MutableGraph graph, String from, String to) {
+	private Link linkCrossCluster(MutableGraph graph, MutableNode fromNode, MutableNode toNode) {
 		if(linkClusters) {
 			//the mechanism is funny, may need to report an issue.
 			MutableGraph source = null;
@@ -775,11 +760,11 @@ public class DotDiffEngine implements DiffEngine {
 				if (source != null & target != null) {	
 					break;
 				}
-				for(MutableNode n: g.nodes()) {
-					if (n.name().toString().equals(from)) {
+				for (MutableNode node : g.nodes()) {
+					if (equalsByName(node, fromNode)) {
 						source = g;
 					}
-					if (n.name().toString().equals(to)) {
+					if (equalsByName(node, toNode)) {
 						target = g;
 					}
 				}
@@ -790,8 +775,8 @@ public class DotDiffEngine implements DiffEngine {
 		}
 		else {
 			//the mechanism is funny, may need to report an issue.
-			MutableNode node = mutNode(from);
-			node.addLink(to);
+			MutableNode node = mutNode(fromNode.name().value());
+			node.addLink(DotDiffIdUtil.getPrefixedName(toNode));
 			Link link = node.links().get(0);
 			graph.rootNodes().add(node);
 			return link;
