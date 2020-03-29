@@ -1,0 +1,36 @@
+digraph G {
+	// designed to study "races" in the process (e.g. node added with "normal"
+	//   style because of changed link, before we detected that such node has
+	//   attribute changes and so it should be added with "modified" style
+	
+	// add name attribute to admin, spyware, and gnulinux
+	// add terminal with availableIn reference
+	// change attacks reference name to blocks
+	// add admins reference to os
+
+	node[shape=record]
+	edge[dir=back, arrowtail=empty]
+
+	OperatingSystem[label = "{OperatingSystem||}"]
+	Admin[label="{Admin|name : String|}"]
+	
+	GNU_Linux[label = "{GNU_Linux|name : String|}"]
+	OS_X[label = "{OS_X||}"]
+	FreeBSD[label = "{FreeBSD||}"]
+	Windows[label = "{Windows||}"]
+	Antivirus[label = "{Antivirus||}"]
+	Spyware[label = "{Spyware|name : String|}"]
+	OperatingSystem->GNU_Linux[name="h1"];
+	OperatingSystem->OS_X[name="h2"];
+	OperatingSystem->FreeBSD[name="h3"];
+	OperatingSystem->Windows[name="h4"];
+	Windows->Antivirus[label=" antivirus ", dir=forward, arrowhead = vee, name="antivirus"];
+	Antivirus->Spyware[label=" blocks ", dir=forward, arrowhead = vee, name="attacks"];
+	Distribution[label = "{Distribution||}"]
+	GNU_Linux->Distribution[label=" distribution ", dir=forward, arrowhead = vee, name="eDistr"];
+
+	Terminal[label = "{Terminal||}"]
+	Terminal->GNU_Linux[label=" availableIn ", dir=forward, arrowhead=vee, name="term"];
+	
+	OperatingSystem->Admin[label=" admins *", dir=forward, arrowhead = vee, name="admins"];
+}

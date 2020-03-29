@@ -15,13 +15,13 @@ digraph G {
 	Antivirus[label = "{Antivirus||}"]
 	Spyware[label = "{Spyware||}"]
 	CriptoMiner[label = "{CriptoMiner||}"]
-	SystemUpdates[label = "{SystemUpdates||}"]
+	FraudulentSystemUpdate[label = "{FraudulentSystemUpdate||}"]
 	OperatingSystem->GNU_Linux[name="h1"];
 	OperatingSystem->OS_X[name="h2"];
 	OperatingSystem->FreeBSD[name="h3"];
 	OperatingSystem->Windows[name="h4"];
 	Windows->CriptoMiner[label=" antivirus ", dir=forward, arrowhead = vee, name="antivirus"];
-	SystemUpdates->Windows[label=" attacks ", dir=forward, arrowhead = vee, name="attacks"];
+	FraudulentSystemUpdate->Windows[label=" attacks ", dir=forward, arrowhead = vee, name="attacks"];
 	Distribution[label = "{Distribution||}"]
 	GNU_Linux->Distribution[label=" distribution ", dir=forward, arrowhead = vee, name="eDistr"];
 }

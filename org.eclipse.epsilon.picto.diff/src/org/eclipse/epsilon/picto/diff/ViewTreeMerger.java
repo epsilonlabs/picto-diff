@@ -43,13 +43,15 @@ public class ViewTreeMerger {
 				"baseline-addProperty.dot",
 				"baseline-addNode.dot",
 				"baseline-addEdges.dot",
+				"baseline-addEdgeFromNewNode.dot",
 				"baseline-addEdgeToNewNode.dot",
 				"baseline-removeNodes.dot",
 				"baseline-removeEdge.dot",
 				"baseline-modifyEdges.dot",
-				"baseline-modifyEdgesToNewNodes.dot");
+				"baseline-modifyEdgesToNewNodes.dot",
+				"baseline-addEdgesToChangedNodes.dot");
 
-		//		modifiedFiles = Arrays.asList("baseline-addEdges.dot");
+		//		modifiedFiles = Arrays.asList("baseline-addEdgesToChangedNodes.dot");
 
 		for (String file : modifiedFiles) {
 

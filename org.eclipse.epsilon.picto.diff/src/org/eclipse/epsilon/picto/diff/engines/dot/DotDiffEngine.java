@@ -107,12 +107,16 @@ public class DotDiffEngine implements DiffEngine {
 	}
 	
 	public void compare() {
-		detectAddedNodes();
-		for (MutableNode n : addedNodes) {
-			addNodeToTargetTemp(n, ADD_MODE.ADDED);
-		}
+		processAddedNodes();
+		// compare attributes first to avoid introducing items
+		//   as unmodified by mistake when processing node links
+		// also detects removed nodes
 		for (MutableNode n : getUnmutableSourceNodes()) {
-			compareNode(n);
+			compareNodeAttributes(n);
+		}
+		processRemovedNodes();
+		for (MutableNode n : getUnmutableSourceNodes()) {
+			compareNodeLinks(n);
 		}
 		if (getUnmutableSourceNodes().size() != 0) {
 			addFeedback("unmutable source nodes > 0, something is wrong");
@@ -120,10 +124,33 @@ public class DotDiffEngine implements DiffEngine {
 		// add new links of newly added nodes (e.g. links where the source is
 		//   an added node). Done after the general comparison to be sure that
 		//   any other change over the already existing nodes is treated first
-		includeAddedNodesLinks();
+		processAddedNodesLinks();
 	}
-	
-	private void includeAddedNodesLinks() {
+
+	private void processAddedNodes() {
+		detectAddedNodes();
+		for (MutableNode n : addedNodes) {
+			addNodeToTargetTemp(n, ADD_MODE.ADDED);
+		}
+	}
+
+	private void detectAddedNodes() {
+		Set<MutableNode> sourceNodes = getUnmutableSourceNodes();
+		for (MutableNode targetNode : getUnmutableTargetNodes()) {
+			boolean found = false;
+			for (MutableNode sourceNode : sourceNodes) {
+				if (equalsByName(targetNode, sourceNode)) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				addedNodes.add(targetNode);
+			}
+		}
+	}
+
+	private void processAddedNodesLinks() {
 		for (MutableNode addedNode : addedNodes) {
 			// invariant: all added nodes are already in targetTemp graph, so just find
 			MutableNode addedNode_targetTemp = findNodeInTargetTemp(addedNode);
@@ -148,28 +175,19 @@ public class DotDiffEngine implements DiffEngine {
 		}
 	}
 
-	private void detectAddedNodes() {
-		Set<MutableNode> sourceNodes = getUnmutableSourceNodes();
-		for (MutableNode targetNode : getUnmutableTargetNodes()) {
-			boolean found = false;
-			for (MutableNode sourceNode : sourceNodes) {
-				if (equalsByName(targetNode, sourceNode)) {
-					found = true;
-					break;
-				}
-			}
-			if (!found) {
-				addedNodes.add(targetNode);
-			}
+	private void processRemovedNodes() {
+		for (MutableNode node : removedNodes) {
+			addIfNotFoundInSourceTemp(node);
+			addIfNotFoundInTargetTemp(node, ADD_MODE.REMOVED);
+			getSourceNodes().remove(node); // (fonso) : is this dangerous?
 		}
 	}
 
-	public void compareNode(MutableNode left_node) {
+	private void compareNodeAttributes(MutableNode left_node) {
 		//get counter part node
 		MutableNode right_node = findNode(left_node, context.getTargetGraph().nodes());
 		//if node exists
 		if (right_node != null) {
-
 			//compare all attributes
 			for(Entry<String, Object> attr: left_node.attrs()) {
 				compareAttribute(left_node, right_node, attr);
@@ -196,151 +214,158 @@ public class DotDiffEngine implements DiffEngine {
 				// right node copy (modified version)
 				addIfNotFoundInTargetTemp(right_node, ADD_MODE.CHANGED);
 			}
-			
-			//compare all links of the left node
-			for(Link left_link: left_node.links()) {
-				//find counter part
-				Link right_link = findLink(right_node, left_link.attrs().get("name").toString());
-				//if link exists
-				if (right_link != null) {
-					//if link has changed
-					if (!compareLink(left_node, right_node, left_link, right_link)) {
-						addChangedLink(left_node, left_link); 
-						addChangedLink(right_node, right_link);
-					}
-					else {
-						//add unchanged link
-						addUnchangedLink(right_node, right_link);
-					}
-				}
-				else {
-					//add to removed links
-					addRemovedLink(left_node, left_link);
-				}
-			}
-			
-			//for all changed links for the left node (sourceTemp, original graph)
-			for (Link changed_link : getChangedLinks(left_node)) {
-				//find the link target
-				MutableNode linkTarget = findLinkTarget(context.getSourceGraph(), changed_link);
-				MutableNode linkTarget_sourceTemp = addIfNotFoundInSourceTemp(linkTarget);
-
-				// the link source is current left node
-				MutableNode linkSource_sourceTemp = addIfNotFoundInSourceTemp(left_node);
-				
-				Link right_link = linkCrossCluster(
-						source_temp, linkSource_sourceTemp, linkTarget_sourceTemp);
-				copyLinkAttributes(right_link, changed_link);
-			}
-			
-			//for all changed links for the right node (targetTemp, graph with changes)
-			for (Link changed_link : getChangedLinks(right_node)) {
-				//find target and add it to the right temp graph
-				MutableNode linkTarget = findLinkTarget(context.getTargetGraph(), changed_link);
-				MutableNode linkTarget_targetTemp = addIfNotFoundInTargetTemp(linkTarget, ADD_MODE.NORMAL);
-
-				//add the source to the right temp graph too (i.e. right_node)
-				MutableNode linkSource_targetTemp = addIfNotFoundInTargetTemp(right_node, ADD_MODE.NORMAL);
-
-				Link right_link = linkCrossCluster(
-						target_temp, linkSource_targetTemp, linkTarget_targetTemp);
-				copyLinkAttributes(right_link, changed_link);
-				DotDiffUtil.paintOrange(right_link);
-			}
-			
-			//for all removed links
-			for(Link removed_link: getRemovedLinks(left_node)) {
-				/*
-				 * add affected nodes and link to the left graph
-				 */
-				MutableNode leftLinkSource_sourceTemp = addIfNotFoundInSourceTemp(left_node);
-
-				MutableNode leftLinkTarget = findLinkTarget(context.getSourceGraph(), removed_link);
-				MutableNode leftLinkTarget_sourceTemp = addIfNotFoundInSourceTemp(leftLinkTarget);
-
-				Link left_link = linkCrossCluster(
-						source_temp, leftLinkSource_sourceTemp, leftLinkTarget_sourceTemp);
-				copyLinkAttributes(left_link, removed_link);
-
-				/*
-				 * deal with the right graph (a bit harder depending on other changes)
-				 */
-				MutableNode rightNode_targetTemp = addIfNotFoundInTargetTemp(right_node, ADD_MODE.NORMAL);
-				
-				MutableNode rightLinkTarget = findLinkTarget(context.getTargetGraph(), removed_link);
-				// the target of the removed link could have also been removed
-				if (rightLinkTarget != null) {
-					MutableNode rightLinkTarget_targetTemp =
-							addIfNotFoundInTargetTemp(rightLinkTarget, ADD_MODE.NORMAL);
-
-					// the source of this link is rightNode (in targetTemp graph)
-					Link right_link = linkCrossCluster(
-							target_temp, rightNode_targetTemp, rightLinkTarget_targetTemp);
-					copyLinkAttributes(right_link, removed_link);
-					DotDiffUtil.paintRed(right_link);
-				}
-				else {
-					rightLinkTarget = findLinkTarget(context.getSourceGraph(), removed_link);
-					MutableNode rightLinkTarget_targetTemp =
-							addIfNotFoundInTargetTemp(rightLinkTarget, ADD_MODE.REMOVED);
-
-					// the source of this link is rightNode (in targetTemp graph)
-					Link right_link = linkCrossCluster(
-							target_temp, rightNode_targetTemp, rightLinkTarget_targetTemp);
-					copyLinkAttributes(right_link, removed_link);
-					DotDiffUtil.paintRed(right_link);
-				}
-			}
-			
-			/*
-			 * below handles added links
-			 */
-
-			// get right node copy and remove changed and unchanged links
-			MutableNode right_node_copy = right_node.copy();
-			right_node_copy.links().removeAll(getChangedLinks(right_node));
-			right_node_copy.links().removeAll(getUnchangedLinks(right_node));
-			
-			// each link remaining in the right node copy is an added one
-			for(Link right_link: right_node_copy.links()) {
-
-				// the source is the right node
-				MutableNode linkSource = right_node;
-				MutableNode linkSource_targetTemp =
-						addIfNotFoundInTargetTemp(linkSource, ADD_MODE.NORMAL);
-
-				MutableNode linkTarget = findLinkTarget(context.getTargetGraph(), right_link);
-				MutableNode linkTarget_targetTemp =
-						addIfNotFoundInTargetTemp(linkTarget, ADD_MODE.NORMAL);
-
-				Link link = linkCrossCluster(
-						target_temp, linkSource_targetTemp, linkTarget_targetTemp);
-				copyLinkAttributes(link, right_link);
-				DotDiffUtil.paintGreen(link);
-
-				// for the added link, add nodes that existed in previous version to the view (sourceTemp)
-				if (findNode(linkSource, addedNodes) == null) {
-					addIfNotFoundInSourceTemp(linkSource);
-				}
-				if (findNode(linkTarget, addedNodes) == null) {
-					addIfNotFoundInSourceTemp(linkTarget);
-				}
-			}
-
-			//remove left node and right node from their graphs (to reduce memory footprint)
-			// (fonso) this only removes them if they are root nodes.
-			//         is this removal dangerous for some strange cases?
-			getSourceNodes().remove(left_node);
-			getTargetNodes().remove(right_node);
 		}
 		else {
-			// if node is deleted
+			// node is deleted
 			addRemovedNode(left_node); // (fonso) right now, not necessary
-			addIfNotFoundInSourceTemp(left_node);
-			
-			addIfNotFoundInTargetTemp(left_node, ADD_MODE.REMOVED);
-			getSourceNodes().remove(left_node); // (fonso) related with removes above: is this dangerous?
 		}
+
+	}
+
+	public void compareNodeLinks(MutableNode left_node) {
+		//get counter part node
+		MutableNode right_node = findNode(left_node, context.getTargetGraph().nodes());
+
+		// if left_node does not exist in right graph, none of its links are processed
+		if (right_node == null) {
+			return;
+		}
+
+		//compare all links of the left node
+		for (Link left_link : left_node.links()) {
+			//find counter part
+			Link right_link = findLink(right_node, left_link.attrs().get("name").toString());
+			//if link exists
+			if (right_link != null) {
+				//if link has changed
+				if (!compareLink(left_node, right_node, left_link, right_link)) {
+					addChangedLink(left_node, left_link);
+					addChangedLink(right_node, right_link);
+				}
+				else {
+					//add unchanged link
+					addUnchangedLink(right_node, right_link);
+				}
+			}
+			else {
+				//add to removed links
+				addRemovedLink(left_node, left_link);
+			}
+		}
+
+		//for all changed links for the left node (sourceTemp, original graph)
+		for (Link changed_link : getChangedLinks(left_node)) {
+			//find the link target
+			MutableNode linkTarget = findLinkTarget(context.getSourceGraph(), changed_link);
+			MutableNode linkTarget_sourceTemp = addIfNotFoundInSourceTemp(linkTarget);
+
+			// the link source is current left node
+			MutableNode linkSource_sourceTemp = addIfNotFoundInSourceTemp(left_node);
+			
+			Link right_link = linkCrossCluster(
+					source_temp, linkSource_sourceTemp, linkTarget_sourceTemp);
+			copyLinkAttributes(right_link, changed_link);
+		}
+
+		//for all changed links for the right node (targetTemp, graph with changes)
+		for (Link changed_link : getChangedLinks(right_node)) {
+			//find target and add it to the right temp graph
+			MutableNode linkTarget = findLinkTarget(context.getTargetGraph(), changed_link);
+			MutableNode linkTarget_targetTemp = addIfNotFoundInTargetTemp(linkTarget, ADD_MODE.NORMAL);
+
+			//add the source to the right temp graph too (i.e. right_node)
+			MutableNode linkSource_targetTemp = addIfNotFoundInTargetTemp(right_node, ADD_MODE.NORMAL);
+
+			Link right_link = linkCrossCluster(
+					target_temp, linkSource_targetTemp, linkTarget_targetTemp);
+			copyLinkAttributes(right_link, changed_link);
+			DotDiffUtil.paintOrange(right_link);
+		}
+
+		//for all removed links
+		for (Link removed_link : getRemovedLinks(left_node)) {
+			/*
+			 * add affected nodes and link to the left graph
+			 */
+			MutableNode leftLinkSource_sourceTemp = addIfNotFoundInSourceTemp(left_node);
+
+			MutableNode leftLinkTarget = findLinkTarget(context.getSourceGraph(), removed_link);
+			MutableNode leftLinkTarget_sourceTemp = addIfNotFoundInSourceTemp(leftLinkTarget);
+
+			Link left_link = linkCrossCluster(
+					source_temp, leftLinkSource_sourceTemp, leftLinkTarget_sourceTemp);
+			copyLinkAttributes(left_link, removed_link);
+
+			/*
+			 * deal with the right graph (a bit harder depending on other changes)
+			 */
+			MutableNode rightNode_targetTemp = addIfNotFoundInTargetTemp(right_node, ADD_MODE.NORMAL);
+
+			MutableNode rightLinkTarget = findLinkTarget(context.getTargetGraph(), removed_link);
+			// the target of the removed link could have also been removed
+			if (rightLinkTarget != null) {
+				MutableNode rightLinkTarget_targetTemp =
+						addIfNotFoundInTargetTemp(rightLinkTarget, ADD_MODE.NORMAL);
+
+				// the source of this link is rightNode (in targetTemp graph)
+				Link right_link = linkCrossCluster(
+						target_temp, rightNode_targetTemp, rightLinkTarget_targetTemp);
+				copyLinkAttributes(right_link, removed_link);
+				DotDiffUtil.paintRed(right_link);
+			}
+			else {
+				rightLinkTarget = findLinkTarget(context.getSourceGraph(), removed_link);
+				MutableNode rightLinkTarget_targetTemp =
+						addIfNotFoundInTargetTemp(rightLinkTarget, ADD_MODE.NORMAL);
+
+				// the source of this link is rightNode (in targetTemp graph)
+				Link right_link = linkCrossCluster(
+						target_temp, rightNode_targetTemp, rightLinkTarget_targetTemp);
+				copyLinkAttributes(right_link, removed_link);
+				DotDiffUtil.paintRed(right_link);
+			}
+		}
+
+		/*
+		 * below handles added links
+		 */
+
+		// get right node copy and remove changed and unchanged links
+		MutableNode right_node_copy = right_node.copy();
+		right_node_copy.links().removeAll(getChangedLinks(right_node));
+		right_node_copy.links().removeAll(getUnchangedLinks(right_node));
+
+		// each link remaining in the right node copy is an added one
+		for (Link right_link : right_node_copy.links()) {
+
+			// the source is the right node
+			MutableNode linkSource = right_node;
+			MutableNode linkSource_targetTemp =
+					addIfNotFoundInTargetTemp(linkSource, ADD_MODE.NORMAL);
+
+			MutableNode linkTarget = findLinkTarget(context.getTargetGraph(), right_link);
+			MutableNode linkTarget_targetTemp =
+					addIfNotFoundInTargetTemp(linkTarget, ADD_MODE.NORMAL);
+
+			Link link = linkCrossCluster(
+					target_temp, linkSource_targetTemp, linkTarget_targetTemp);
+			copyLinkAttributes(link, right_link);
+			DotDiffUtil.paintGreen(link);
+
+			// for the added link, add nodes that existed in previous version to the view (sourceTemp)
+			if (findNode(linkSource, addedNodes) == null) {
+				addIfNotFoundInSourceTemp(linkSource);
+			}
+			if (findNode(linkTarget, addedNodes) == null) {
+				addIfNotFoundInSourceTemp(linkTarget);
+			}
+		}
+
+		//remove left node and right node from their graphs (to reduce memory footprint)
+		// (fonso) this only removes them if they are root nodes.
+		//         is this removal dangerous for some strange cases?
+		getSourceNodes().remove(left_node);
+		getTargetNodes().remove(right_node);
 	}
 	
 	// TODO: should we be careful here about not copying the same edge name
@@ -609,19 +634,7 @@ public class DotDiffEngine implements DiffEngine {
 			links.add(link);	
 		}
 	}
-	
-	private void addAddedLink(MutableNode node, Link link) {
-		HashSet<Link> links = addedLinks.get(node);
-		if (links == null) {
-			links = new HashSet<Link>();
-			links.add(link);
-			addedLinks.put(node, links);
-		}
-		else {
-			links.add(link);
-		}
-	}
-	
+
 	private void addRemovedLink(MutableNode node, Link link) {
 		HashSet<Link> links = removedLinks.get(node);
 		if (links == null) {
@@ -701,7 +714,8 @@ public class DotDiffEngine implements DiffEngine {
 			attrs.add(attr);
 		}
 	}
-	
+
+	// (fonso): maintained in case that fine-grain treatment of attrs is improved
 	private void addAddedAttr(MutableNode node, String attr) {
 		HashSet<String> attrs = addedAttrs.get(node);
 		if (attrs == null) {
