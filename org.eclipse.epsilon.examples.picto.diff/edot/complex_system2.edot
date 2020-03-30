@@ -1,0 +1,40 @@
+digraph G {
+	// Changes:
+	// Remove Windows
+	// Change OSX inheritance to FreeBSD
+	// Add name labels to OperatingSystem and Distribution
+	// Add basedOn reference to Distribution
+	// Add Terminal and reference to GNU_Linux
+	// Add OS->Admin reference
+	// Add FileSystem to OSs
+
+	node[shape=record]
+	edge[dir=back, arrowtail=empty]
+
+	OperatingSystem[label = "{OperatingSystem|name : String|}"]
+	Admin[label="{Admin||}"]
+	GNU_Linux[label = "{GNU_Linux||}"]
+	OS_X[label = "{OS_X||}"]
+	FreeBSD[label = "{FreeBSD||}"]
+	Antivirus[label = "{Antivirus||}"]
+	Spyware[label = "{Spyware||}"]
+	Terminal[label = "{Terminal||}"]
+	Distribution[label = "{Distribution|name : String|}"]
+	Filesystem[label = "{Filesystem|name : String|}"]
+	
+	OperatingSystem->GNU_Linux[name="h1"];
+	OperatingSystem->FreeBSD[name="h3"];
+	OperatingSystem->Admin[label=" admins *", dir=forward, arrowhead = vee, name="admins"];
+	OperatingSystem->Filesystem[label=" filesystem ", arrowtail=diamond, name="e6"];
+	
+	FreeBSD->OS_X[name="h2"];
+	
+	Antivirus->Spyware[label=" attacks ", dir=forward, arrowhead = vee, name="attacks"];
+	
+	GNU_Linux->Distribution[label=" distribution ", dir=forward, arrowhead = vee, name="eDistr"];
+
+	Distribution->Distribution[label=" basedOn ", dir=forward, arrowhead = vee, name="derivedDistro"];
+
+	Terminal->GNU_Linux[label=" availableIn ", dir=forward, arrowhead=vee, name="term"];
+	
+}
