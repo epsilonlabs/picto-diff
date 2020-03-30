@@ -1,0 +1,29 @@
+digraph G {
+	graph[splines=ortho, nodesep=0.5]
+	node[fontname=Tahoma, fontsize=10, shape=record]
+	edge[fontname=Tahoma, fontsize=10, dir=back, arrowtail=empty]
+	
+		_Component[shape=none, margin=0, label = <<table cellspacing='0' cellborder='0' cellpadding='1' bgcolor='#c8f0a1'><tr><td sides='B' colspan='2' border='1'><table border='0' cellspacing='0' cellborder='0' cellpading='0'><tr><td align='right' valign='middle'><img src='/home/fonso/repos/york/org.eclipse.epsilon/examples/org.eclipse.epsilon.examples.picto.ecore/ecore2vis/icons/EClass.gif'></img></td><td align='left' valign='middle' href="javascript:top.showElement('//Component','platform:/resource/org.eclipse.epsilon.examples.picto.ecore/comps.ecore')" tooltip='Go to Component in the Ecore editor'>Component</td></tr></table></td></tr><tr><td></td><td></td></tr><tr><td><img src='/home/fonso/repos/york/org.eclipse.epsilon/examples/org.eclipse.epsilon.examples.picto.ecore/ecore2vis/icons/EAttribute.gif'></img></td><td align='left'><font color='blue'>action : EString  </font></td></tr><tr><td><img src='/home/fonso/repos/york/org.eclipse.epsilon/examples/org.eclipse.epsilon.examples.picto.ecore/ecore2vis/icons/EReference.gif'></img></td><td align='left'><font color='blue'>inPorts : Port[*]  </font></td></tr><tr><td><img src='/home/fonso/repos/york/org.eclipse.epsilon/examples/org.eclipse.epsilon.examples.picto.ecore/ecore2vis/icons/EAttribute.gif'></img></td><td align='left'>name : EString  </td></tr><tr><td><img src='/home/fonso/repos/york/org.eclipse.epsilon/examples/org.eclipse.epsilon.examples.picto.ecore/ecore2vis/icons/EReference.gif'></img></td><td align='left'><font color='blue'>outPorts : Port[*]  </font></td></tr></table>>]
+		
+		
+			
+				_ComponentNameStartsWithUpperCase[label="NameStartsWithUpperCase:  Component names \lshould start with an upper-case letter \l", style="filled", fillcolor="khaki1"]
+				_Component->_ComponentNameStartsWithUpperCase[arrowtail=none, style=dashed, name="_ComponentNameStartsWithUpperCase"]
+				_ComponentAtLeastOnePort[label="AtLeastOnePort:  A component must have at \lleast one port \l", style="filled", fillcolor="mistyrose"]
+				_Component->_ComponentAtLeastOnePort[arrowtail=none, style=dashed, name="_ComponentAtLeastOnePort"]
+			
+				_Component_Documentation[shape="note", label="Components are behavioural blocks that communicate \lthrough input and output ports \l", style="filled", fillcolor="azure"]
+				_Component_Documentation->_Component[arrowtail=none, style=dashed, name="_Component_Documentation"];
+		
+		_Port[shape=none, margin=0, label = <<table cellspacing='0' cellborder='0' cellpadding='1' bgcolor='#fffcdc'><tr><td sides='B' colspan='2' border='1'><table border='0' cellspacing='0' cellborder='0' cellpading='0'><tr><td align='right' valign='middle'><img src='/home/fonso/repos/york/org.eclipse.epsilon/examples/org.eclipse.epsilon.examples.picto.ecore/ecore2vis/icons/EClass.gif'></img></td><td align='left' valign='middle' href="javascript:top.showView('/Model/Classes/Port')" tooltip='Show class diagram for Port'>Port</td></tr></table></td></tr><tr><td></td><td></td></tr><tr><td><img src='/home/fonso/repos/york/org.eclipse.epsilon/examples/org.eclipse.epsilon.examples.picto.ecore/ecore2vis/icons/EAttribute.gif'></img></td><td align='left'>name : EString  </td></tr><tr><td><img src='/home/fonso/repos/york/org.eclipse.epsilon/examples/org.eclipse.epsilon.examples.picto.ecore/ecore2vis/icons/EReference.gif'></img></td><td align='left'>type : Type  </td></tr></table>>]
+		
+		
+		
+		_NamedElement[shape=none, margin=0, label = <<table cellspacing='0' cellborder='0' cellpadding='1' bgcolor='#fffcdc'><tr><td sides='B' colspan='2' border='1'><table border='0' cellspacing='0' cellborder='0' cellpading='0'><tr><td align='right' valign='middle'><img src='/home/fonso/repos/york/org.eclipse.epsilon/examples/org.eclipse.epsilon.examples.picto.ecore/ecore2vis/icons/EClass.gif'></img></td><td align='left' valign='middle' href="javascript:top.showView('/Model/Classes/NamedElement')" tooltip='Show class diagram for NamedElement'>NamedElement</td></tr></table></td></tr><tr><td></td><td></td></tr><tr><td><img src='/home/fonso/repos/york/org.eclipse.epsilon/examples/org.eclipse.epsilon.examples.picto.ecore/ecore2vis/icons/EAttribute.gif'></img></td><td align='left'>name : EString  </td></tr></table>>]
+		
+		
+		
+	
+		_NamedElement->_Component[name="_NamedElement-isSuperTypeOf-_Component"]
+	
+}
