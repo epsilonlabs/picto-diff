@@ -108,7 +108,7 @@ public class DotDiffEngine implements DiffEngine {
 			try {
 				engine.diff(diffView, baselineView, modifiedView);
 				Files.write(Paths.get(String.format(outputLocationFormat, file)),
-						diffView.getPromise().getContent().getBytes(),
+						diffView.getContent().getText().getBytes(),
 						StandardOpenOption.CREATE,
 						StandardOpenOption.WRITE,
 						StandardOpenOption.TRUNCATE_EXISTING);
