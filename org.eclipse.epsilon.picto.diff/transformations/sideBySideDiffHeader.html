@@ -24,12 +24,14 @@
     window.addEventListener('load', function () {
         var leftIframeContent = document.getElementById('leftIframeContent').textContent;
         var leftIframe = document.getElementById('leftIframe').contentWindow.document;
+        leftIframe.body.innerHTML="";
         leftIframe.open();
         leftIframe.write(leftIframeContent);
         leftIframe.close();
 
         var rightIframeContent = document.getElementById('rightIframeContent').textContent;
         var rightIframe = document.getElementById('rightIframe').contentWindow.document;
+        rightIframe.body.innerHTML="";
         rightIframe.open();
         rightIframe.write(rightIframeContent);
         rightIframe.close();
