@@ -1,0 +1,27 @@
+<!-- Note: Does not work in picto window! It does work if opened with Eclipse web browser -->
+<!-- Cause: relative iframe files location (instead of absolute paths) -->
+
+<html>
+<style>
+    .t_container {
+        width: 100%;
+        height: 100%;
+    }
+
+    .tc_iframe {
+        width: 50%;
+        height: 100%;
+        float: left;
+    }
+</style>
+<div class="t_container">
+    <div class="tc_iframe">
+        <iframe class="ts_iframe" src="sideBySideDiff-comps.html" height="100%" width="100%"></iframe>
+    </div>
+
+    <div class="tc_iframe">
+        <iframe class="ts_iframe" src="sideBySideDiff-comps-removePorts.html" height="100%" width="100%"></iframe>
+    </div>
+</div>
+
+</html>

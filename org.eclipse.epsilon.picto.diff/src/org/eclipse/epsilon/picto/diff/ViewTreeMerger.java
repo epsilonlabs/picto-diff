@@ -9,14 +9,14 @@ import org.eclipse.epsilon.picto.ViewTree;
 import org.eclipse.epsilon.picto.diff.engines.DiffEngine;
 import org.eclipse.epsilon.picto.diff.engines.DiffEngineFactory;
 import org.eclipse.epsilon.picto.diff.engines.dot.DotDiffEngineFactory;
-import org.eclipse.epsilon.picto.diff.engines.dummy.DummyDiffEngineFactory;
+import org.eclipse.epsilon.picto.diff.engines.sidebyside.SideBySideDiffEngineFactory;
 
 public class ViewTreeMerger {
 
 	static final List<DiffEngineFactory> DIFF_ENGINE_FACTORIES =
 			Arrays.asList(
 					new DotDiffEngineFactory(),
-					new DummyDiffEngineFactory());
+					new SideBySideDiffEngineFactory());
 
 	public static ViewTree diffMerge(ViewTree left, ViewTree right) throws Exception {
 		return diffMerge(new ViewTree(), Arrays.asList(""), left, right);
