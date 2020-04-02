@@ -2,4 +2,7 @@
 <picto standalone="true">
 	<parameter name="left" file="edot/simple_filesystem.edot"/>
 	<parameter name="right" file="edot/simple_filesystem2.edot"/>
+	<!-- Examples of valid alternatives: sidebyside, dot, dummy -->
+	<!-- If not found, it searchs among the available diff engines -->
+	<parameter name="diffEngine" value="sidebyside"/>
 </picto>

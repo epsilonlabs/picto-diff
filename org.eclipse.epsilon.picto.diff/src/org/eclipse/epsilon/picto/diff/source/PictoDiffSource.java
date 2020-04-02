@@ -85,6 +85,12 @@ public class PictoDiffSource extends StandalonePictoSource {
 		Parameter pLeft = parameters.stream().filter(p -> p.getName().equals("left")).findFirst().get();
 		Parameter pRight = parameters.stream().filter(p -> p.getName().equals("right")).findFirst().get();
 
+		String diffEngine = null;
+		Parameter diffEnginePar = parameters.stream().filter(p -> p.getName().equals("diffEngine")).findFirst().get();
+		if (diffEnginePar != null) {
+			diffEngine = (String) diffEnginePar.getValue();
+		}
+
 		IProject project = null;
 		if (editor.getEditorInput() instanceof IFileEditorInput) {
 			IFileEditorInput input = (IFileEditorInput) editor.getEditorInput();
@@ -103,7 +109,7 @@ public class PictoDiffSource extends StandalonePictoSource {
 
 		ViewTree leftViewTree = leftPictoSource.getViewTree(leftWrapper);
 		ViewTree rightViewTree = rightPictoSource.getViewTree(rightWrapper);
-		ViewTree mergedDiffViewTree = ViewTreeMerger.diffMerge(leftViewTree, rightViewTree);
+		ViewTree mergedDiffViewTree = ViewTreeMerger.diffMerge(leftViewTree, rightViewTree, diffEngine);
 
 		ViewTree viewTree = new ViewTree();
 		ViewTreeMerger.append(viewTree, mergedDiffViewTree, "Differences");

@@ -9,6 +9,7 @@ import org.eclipse.epsilon.picto.ViewTree;
 import org.eclipse.epsilon.picto.diff.engines.DiffEngine;
 import org.eclipse.epsilon.picto.diff.engines.DiffEngineFactory;
 import org.eclipse.epsilon.picto.diff.engines.dot.DotDiffEngineFactory;
+import org.eclipse.epsilon.picto.diff.engines.dummy.DummyDiffEngineFactory;
 import org.eclipse.epsilon.picto.diff.engines.sidebyside.SideBySideDiffEngineFactory;
 
 public class ViewTreeMerger {
@@ -18,16 +19,16 @@ public class ViewTreeMerger {
 					new DotDiffEngineFactory(),
 					new SideBySideDiffEngineFactory());
 
-	public static ViewTree diffMerge(ViewTree left, ViewTree right) throws Exception {
-		return diffMerge(new ViewTree(), Arrays.asList(""), left, right);
+	public static ViewTree diffMerge(ViewTree left, ViewTree right, String diffEngineName) throws Exception {
+		return diffMerge(new ViewTree(), Arrays.asList(""), left, right, getDiffEngineFactory(diffEngineName));
 	}
 
 	private static ViewTree diffMerge(ViewTree mergedViewTree, List<String> currentPath,
-			ViewTree left, ViewTree right) throws Exception {
+			ViewTree left, ViewTree right, DiffEngineFactory engineFactory) throws Exception {
 
 		if (currentPath.size() == 1) {
 			// compare roots of the viewtrees
-			diff(mergedViewTree, left, right);
+			diff(mergedViewTree, left, right, engineFactory);
 		}
 
 		ViewTree currentLeft = left.forPath(currentPath);
@@ -42,11 +43,11 @@ public class ViewTreeMerger {
 					counterpart = rightChild;
 					remainingRightChildren.remove(counterpart);
 					diffView = copy(leftChild);
-					diff(diffView, leftChild, counterpart);
+					diff(diffView, leftChild, counterpart, engineFactory);
 					if (!leftChild.getChildren().isEmpty()) {
 						List<String> newPath = new ArrayList<>(currentPath);
 						newPath.add(leftChild.getName());
-						diffView = diffMerge(diffView, newPath, left, right);
+						diffView = diffMerge(diffView, newPath, left, right, engineFactory);
 					}
 					break;
 				}
@@ -97,14 +98,21 @@ public class ViewTreeMerger {
 	 */
 	private static ViewTree copy(ViewTree viewTree) {
 		ViewTree copy = new ViewTree(viewTree.getName());
-		copy.setPromise(viewTree.getPromise());
+		// careful with programmatically generated content (setting promises
+		//   overrides cachedContent, i.e. any manually set content)
+		if (viewTree.getPromise() != null) {
+			copy.setPromise(viewTree.getPromise());
+		}
+		else if (viewTree.getCachedContent() != null) {
+			copy.setContent(viewTree.getCachedContent());
+		}
 		copy.setName(viewTree.getName());
 		copy.setFormat(viewTree.getFormat());
 		copy.setIcon(viewTree.getIcon());
 		return copy;
 	}
 
-	private static void diff(ViewTree diffView, ViewTree left, ViewTree right) throws Exception {
+	private static void diff(ViewTree diffView, ViewTree left, ViewTree right, DiffEngineFactory engineFactory) throws Exception {
 		if (left.getPromise() == null && right.getPromise() == null) {
 			if (!left.getName().equals("") && !right.getName().equals("")) {
 				diffView.setPromise(new StringContentPromise("Both viewtrees empty"));
@@ -120,13 +128,41 @@ public class ViewTreeMerger {
 		}
 		else {
 			diffView.setName(String.format("%s (Modified)", diffView.getName()));
-			for (DiffEngineFactory engineFactory : DIFF_ENGINE_FACTORIES) {
+			if (engineFactory != null) {
 				DiffEngine engine = engineFactory.createDiffEngine();
 				if (engine.supports(left.getFormat())) {
 					engine.diff(diffView, left, right);
-					break;
+				}
+				else {
+					diffView.setPromise(new StringContentPromise(engine.getClass().getName() +
+							" does not support the format of the compared files"));
+					diffView.setFormat("text");
+				}
+			}
+			else {
+				for (DiffEngineFactory factory : DIFF_ENGINE_FACTORIES) {
+					DiffEngine engine = factory.createDiffEngine();
+					if (engine.supports(left.getFormat())) {
+						engine.diff(diffView, left, right);
+						break;
+					}
 				}
 			}
 		}
+	}
+
+	private static DiffEngineFactory getDiffEngineFactory(String diffEngineName) {
+		if (diffEngineName != null) {
+			if (diffEngineName.equalsIgnoreCase("dot")) {
+				return new DotDiffEngineFactory();
+			}
+			if (diffEngineName.equalsIgnoreCase("sidebyside")) {
+				return new SideBySideDiffEngineFactory();
+			}
+			if (diffEngineName.equalsIgnoreCase("dummy")) {
+				return new DummyDiffEngineFactory();
+			}
+		}
+		return null;
 	}
 }
