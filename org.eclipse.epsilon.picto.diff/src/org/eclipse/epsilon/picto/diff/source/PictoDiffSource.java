@@ -15,11 +15,11 @@ import org.eclipse.epsilon.picto.dom.Picto;
 import org.eclipse.epsilon.picto.dom.PictoFactory;
 import org.eclipse.epsilon.picto.source.PictoSource;
 import org.eclipse.epsilon.picto.source.PictoSourceExtensionPointManager;
-import org.eclipse.epsilon.picto.source.SimpleSource;
+import org.eclipse.epsilon.picto.source.StandalonePictoSource;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IFileEditorInput;
 
-public class PictoDiffSource extends SimpleSource {
+public class PictoDiffSource extends StandalonePictoSource {
 
 	@Override
 	public String getFormat() {
@@ -34,37 +34,47 @@ public class PictoDiffSource extends SimpleSource {
 	@Override
 	public Picto getRenderingMetadata(IEditorPart editorPart) {
 		IFile diffFile = getFile(editorPart);
+		Picto metadata = null;
 		if (diffFile.exists()) {
-			Picto metadata = PictoFactory.eINSTANCE.createPicto();
-			metadata.setTemplate(getFile(editorPart).getLocation().toOSString());
-			metadata.setFormat(getFormat());
-			// get the two internal picto files as parameters of the Picto dom
-			// TODO: check that both files have compatible representations/technologies for
-			// diffing
-			try {
-				BufferedReader reader = new BufferedReader(new InputStreamReader(diffFile.getContents(true)));
-				Parameter pLeft = PictoFactory.eINSTANCE.createParameter();
-				pLeft.setName("left");
-				pLeft.setFile(reader.readLine());
-				metadata.getParameters().add(pLeft);
-				Parameter pRight = PictoFactory.eINSTANCE.createParameter();
-				pRight.setName("right");
-				pRight.setFile(reader.readLine());
-				metadata.getParameters().add(pRight);
-			} catch (Exception e) {
-				return null;
+			metadata = super.getRenderingMetadata(editorPart);
+			if (metadata == null || !metadata.isStandalone()) {
+				metadata = getFromSimpleFile(diffFile);
 			}
-			return metadata;
 		}
-		return null;
+		return metadata;
+	}
+
+	public Picto getFromSimpleFile(IFile diffFile) {
+		Picto metadata = PictoFactory.eINSTANCE.createPicto();
+		metadata.setTemplate(diffFile.getLocation().toOSString());
+		metadata.setFormat(getFormat());
+		metadata.setStandalone(true);
+		// get the two internal picto files as parameters of the Picto dom
+		try {
+			BufferedReader reader = new BufferedReader(new InputStreamReader(diffFile.getContents(true)));
+			Parameter pLeft = PictoFactory.eINSTANCE.createParameter();
+			pLeft.setName("left");
+			pLeft.setFile(reader.readLine());
+			metadata.getParameters().add(pLeft);
+			Parameter pRight = PictoFactory.eINSTANCE.createParameter();
+			pRight.setName("right");
+			pRight.setFile(reader.readLine());
+			metadata.getParameters().add(pRight);
+		}
+		catch (Exception e) {
+			return null;
+		}
+		return metadata;
 	}
 
 	@Override
 	public boolean supports(IEditorPart editorPart) {
-		if (!super.supports(editorPart))
-			return false;
-		Picto picto = getRenderingMetadata(editorPart);
-		return picto != null;
+		// no calls to super as long as we want support for simple diff files
+		if (supportsEditorType(editorPart)) {
+			Picto picto = getRenderingMetadata(editorPart);
+			return picto != null && picto.isStandalone();
+		}
+		return false;
 	}
 
 	@Override

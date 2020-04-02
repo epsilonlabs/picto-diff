@@ -1,0 +1,5 @@
+<?nsuri picto?>
+<picto standalone="true">
+	<parameter name="left" file="edot/simple_filesystem.edot"/>
+	<parameter name="right" file="edot/simple_filesystem2.edot"/>
+</picto>
