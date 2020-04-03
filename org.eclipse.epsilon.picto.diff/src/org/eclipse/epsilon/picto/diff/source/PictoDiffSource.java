@@ -3,6 +3,7 @@ package org.eclipse.epsilon.picto.diff.source;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -81,12 +82,11 @@ public class PictoDiffSource extends StandalonePictoSource {
 	public ViewTree getViewTree(IEditorPart editor) throws Exception {
 
 		Picto pictoDiff = getRenderingMetadata(editor);
-		List<Parameter> parameters = pictoDiff.getParameters();
-		Parameter pLeft = parameters.stream().filter(p -> p.getName().equals("left")).findFirst().get();
-		Parameter pRight = parameters.stream().filter(p -> p.getName().equals("right")).findFirst().get();
+		Parameter pLeft = getParameter(pictoDiff, "left");
+		Parameter pRight = getParameter(pictoDiff, "right");
 
 		String diffEngine = null;
-		Parameter diffEnginePar = parameters.stream().filter(p -> p.getName().equals("diffEngine")).findFirst().get();
+		Parameter diffEnginePar = getParameter(pictoDiff, "diffEngine");
 		if (diffEnginePar != null) {
 			diffEngine = (String) diffEnginePar.getValue();
 		}
@@ -117,6 +117,16 @@ public class PictoDiffSource extends StandalonePictoSource {
 		ViewTreeMerger.append(viewTree, rightViewTree, "Original Right");
 
 		return viewTree;
+	}
+
+	protected Parameter getParameter(Picto picto, String parameterName) {
+		try {
+			return picto.getParameters().stream()
+					.filter(p -> p.getName().equals(parameterName)).findFirst().get();
+		}
+		catch (NoSuchElementException e) {
+			return null;
+		}
 	}
 
 	protected PictoSource getSource(IEditorPart editorPart) {
