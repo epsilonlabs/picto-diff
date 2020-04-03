@@ -1,0 +1,8 @@
+<?nsuri picto?>
+<picto standalone="true">
+	<parameter name="left" file="ecore2vis-classDiagram/component.dot"/>
+	<parameter name="right" file="ecore2vis-classDiagram/component-removeOutPorts.dot"/>
+	<!-- Examples of valid alternatives: sidebyside, dot, dummy -->
+	<!-- If not found, it searchs among the available diff engines -->
+	<parameter name="diffEngine" value="sidebyside"/>
+</picto>
