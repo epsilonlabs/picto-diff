@@ -49,7 +49,7 @@ public class ExtendedDotSource extends DotSource {
 
 		paths.add("Graph");
 		StringContentPromise graphPromise = new StringContentPromise(promise.getDotGraph());
-		viewTree.addPath(paths, graphPromise, getFormat(), getIcon(), Collections.emptyList(), new ArrayList<>());
+		viewTree.add(paths, new ViewTree(graphPromise, getFormat(), getIcon(), Collections.emptyList(), new ArrayList<>()));
 		paths.remove(0);
 
 		paths.add("Nodes");
@@ -58,8 +58,8 @@ public class ExtendedDotSource extends DotSource {
 		Collections.sort(nodeNames);
 		for (String key : nodeNames) {
 			paths.add(key);
-			viewTree.addPath(
-					paths, source_map.get(key), getFormat(), getIcon(), Collections.emptyList(), new ArrayList<>());
+			viewTree.add(
+					paths, new ViewTree(source_map.get(key), getFormat(), getIcon(), Collections.emptyList(), new ArrayList<>()));
 			paths.remove(paths.size() - 1);
 		}
 		return viewTree;
