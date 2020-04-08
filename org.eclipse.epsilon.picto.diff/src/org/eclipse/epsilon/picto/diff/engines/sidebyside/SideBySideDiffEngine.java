@@ -29,7 +29,7 @@ public class SideBySideDiffEngine implements DiffEngine {
 		loadHeaderText();
 
 		PictoView pictoView = new PictoView();
-		pictoView.setViewRenderer(new ViewRenderer(pictoView, null));
+		pictoView.setViewRenderer(new ViewRenderer(null));
 		Iterator<ViewContent> leftViewContents = left.getContents(pictoView).iterator();
 		Iterator<ViewContent> rightViewContents = right.getContents(pictoView).iterator();
 
