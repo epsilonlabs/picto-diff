@@ -2,6 +2,7 @@ package org.eclipse.epsilon.picto.diff.engines.sidebyside;
 
 import java.util.Collections;
 
+import org.eclipse.epsilon.picto.PictoView;
 import org.eclipse.epsilon.picto.ViewContent;
 import org.eclipse.epsilon.picto.ViewRenderer;
 
@@ -47,7 +48,7 @@ public class SideBySideViewContent extends ViewContent {
 	}
 
 	@Override
-	public ViewContent getSourceContent(ViewRenderer renderer) {
-		return new ViewContent("html", getSourceText(renderer), layers, patches);
+	public ViewContent getSourceContent(PictoView pictoView) {
+		return new ViewContent("html", getSourceText(pictoView.getViewRenderer()), layers, patches);
 	}
 }

@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.util.Iterator;
 
 import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.epsilon.picto.PictoView;
 import org.eclipse.epsilon.picto.ViewContent;
 import org.eclipse.epsilon.picto.ViewRenderer;
 import org.eclipse.epsilon.picto.ViewTree;
@@ -27,9 +28,10 @@ public class SideBySideDiffEngine implements DiffEngine {
 
 		loadHeaderText();
 
-		ViewRenderer renderer = new ViewRenderer(null);
-		Iterator<ViewContent> leftViewContents = left.getContents(renderer).iterator();
-		Iterator<ViewContent> rightViewContents = right.getContents(renderer).iterator();
+		PictoView pictoView = new PictoView();
+		pictoView.setViewRenderer(new ViewRenderer(pictoView, null));
+		Iterator<ViewContent> leftViewContents = left.getContents(pictoView).iterator();
+		Iterator<ViewContent> rightViewContents = right.getContents(pictoView).iterator();
 
 		ViewContent diffContent = null;
 		ViewContent currentContent = null;
