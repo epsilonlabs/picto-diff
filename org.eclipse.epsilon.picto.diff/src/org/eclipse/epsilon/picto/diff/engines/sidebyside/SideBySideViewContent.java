@@ -13,7 +13,7 @@ public class SideBySideViewContent extends ViewContent {
 	private String rightText;
 
 	public SideBySideViewContent(String headerText, String leftText, String rightText) {
-		super("html", "", Collections.emptyList(), Collections.emptyList());
+		super("html", "", null, Collections.emptyList(), Collections.emptyList());
 		this.headerText = headerText;
 		this.leftText = leftText;
 		this.rightText = rightText;
@@ -40,15 +40,15 @@ public class SideBySideViewContent extends ViewContent {
 	public String getSourceText(ViewRenderer renderer) {
 		String leftFormatted = String.format(
 				"<script id=\"leftIframeContent\" type=\"text/template\">\n%s</script>",
-				renderer.getZoomableVerbatim(leftText));
+				renderer.getVerbatim(leftText));
 		String rightFormatted = String.format(
 				"<script id=\"rightIframeContent\" type=\"text/template\">\n%s</script>",
-				renderer.getZoomableVerbatim(rightText));
+				renderer.getVerbatim(rightText));
 		return String.format("<html>%s%s%s</html>", headerText, leftFormatted, rightFormatted);
 	}
 
 	@Override
 	public ViewContent getSourceContent(PictoView pictoView) {
-		return new ViewContent("html", getSourceText(pictoView.getViewRenderer()), layers, patches);
+		return new ViewContent("html", getSourceText(pictoView.getViewRenderer()), file, layers, patches);
 	}
 }

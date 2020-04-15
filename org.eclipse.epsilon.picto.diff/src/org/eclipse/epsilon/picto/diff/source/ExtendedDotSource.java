@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.epsilon.picto.StringContentPromise;
+import org.eclipse.epsilon.picto.StaticContentPromise;
 import org.eclipse.epsilon.picto.ViewTree;
 import org.eclipse.epsilon.picto.diff.engines.dot.util.GraphPromiseGenerator;
 import org.eclipse.epsilon.picto.diff.engines.dot.util.SubGraphPromise;
@@ -48,7 +48,7 @@ public class ExtendedDotSource extends DotSource {
 		ArrayList<String> paths = new ArrayList<String>();
 
 		paths.add("Graph");
-		StringContentPromise graphPromise = new StringContentPromise(promise.getDotGraph());
+		StaticContentPromise graphPromise = new StaticContentPromise(promise.getDotGraph());
 		viewTree.add(paths, new ViewTree(graphPromise, getFormat(), getIcon(), Collections.emptyList(), new ArrayList<>()));
 		paths.remove(0);
 

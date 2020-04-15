@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.eclipse.epsilon.picto.StringContentPromise;
+import org.eclipse.epsilon.picto.StaticContentPromise;
 import org.eclipse.epsilon.picto.ViewTree;
 import org.eclipse.epsilon.picto.diff.engines.DiffEngine;
 import org.eclipse.epsilon.picto.diff.engines.DiffEngineFactory;
@@ -115,12 +115,12 @@ public class ViewTreeMerger {
 	private static void diff(ViewTree diffView, ViewTree left, ViewTree right, DiffEngineFactory engineFactory) throws Exception {
 		if (left.getPromise() == null && right.getPromise() == null) {
 			if (!left.getName().equals("") && !right.getName().equals("")) {
-				diffView.setPromise(new StringContentPromise("Both viewtrees empty"));
+				diffView.setPromise(new StaticContentPromise("Both viewtrees empty"));
 				diffView.setFormat("text");
 			}
 		}
 		else if (left.getPromise() == null || right.getPromise() == null) {
-			diffView.setPromise(new StringContentPromise("Some viewtree empty"));
+			diffView.setPromise(new StaticContentPromise("Some viewtree empty"));
 			diffView.setFormat("text");
 		}
 		else if (left.getPromise().getContent().equals(right.getPromise().getContent())) {
@@ -134,7 +134,7 @@ public class ViewTreeMerger {
 					engine.diff(diffView, left, right);
 				}
 				else {
-					diffView.setPromise(new StringContentPromise(engine.getClass().getName() +
+					diffView.setPromise(new StaticContentPromise(engine.getClass().getName() +
 							" does not support the format of the compared files"));
 					diffView.setFormat("text");
 				}

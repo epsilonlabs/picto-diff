@@ -18,7 +18,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.epsilon.picto.StringContentPromise;
+import org.eclipse.epsilon.picto.StaticContentPromise;
 import org.eclipse.epsilon.picto.ViewTree;
 import org.eclipse.epsilon.picto.diff.PictoDiffPlugin;
 import org.eclipse.epsilon.picto.diff.engines.DiffEngine;
@@ -76,7 +76,7 @@ public class DotDiffEngine implements DiffEngine {
 		String baselineDot = new String(
 				Files.readAllBytes(Paths.get(String.format(filesLocationFormat, "baseline.dot"))));
 		ViewTree baselineView = new ViewTree();
-		baselineView.setPromise(new StringContentPromise(baselineDot));
+		baselineView.setPromise(new StaticContentPromise(baselineDot));
 		baselineView.setFormat("graphviz-dot");
 
 		List<String> modifiedFiles = Arrays.asList(
@@ -100,7 +100,7 @@ public class DotDiffEngine implements DiffEngine {
 
 			ViewTree modifiedView = new ViewTree();
 			modifiedView.setFormat("graphviz-dot");
-			modifiedView.setPromise(new StringContentPromise(modifiedDot));
+			modifiedView.setPromise(new StaticContentPromise(modifiedDot));
 
 			ViewTree diffView = new ViewTree();
 			DotDiffContext context = new DotDiffContext(baselineDot, modifiedDot);
@@ -885,7 +885,7 @@ public class DotDiffEngine implements DiffEngine {
 			svgEvents = new String(Files.readAllBytes(Paths.get(
 					FileLocator.resolve(PictoDiffPlugin.getDefault().getBundle().getEntry(svgEventsFile)).getPath())));
 		}
-		diffView.setPromise(new StringContentPromise(resultDot + svgEvents));
+		diffView.setPromise(new StaticContentPromise(resultDot + svgEvents));
 		diffView.setFormat("html");
 		diffView.setIcon("diagram-ff0000");
 	}
