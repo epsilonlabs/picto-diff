@@ -35,6 +35,9 @@ import guru.nidi.graphviz.model.PortNode;
 
 public class DotDiffEngine implements DiffEngine {
 	
+	public static final String SVG_EVENTS_FILE = "transformations/svgEvents.html";
+	public static String svgEvents;
+
 	private ArrayList<String> feedbacks = new ArrayList<String>();
 	public enum DISPLAY_MODE {ALL, CHANGED};
 	private enum ADD_MODE {ADDED, CHANGED, REMOVED, NORMAL};
@@ -871,22 +874,23 @@ public class DotDiffEngine implements DiffEngine {
 	@Override
 	public void diff(ViewTree diffView, ViewTree left, ViewTree right) throws Exception {
 		this.context = new DotDiffContext(left.getPromise().getContent(), right.getPromise().getContent());
-		load();
-		compare();
-		String resultDot = Graphviz.fromGraph(result).render(Format.SVG).toString();
-		String svgEvents = null;
-		String svgEventsFile = "transformations/svgEvents.html";
-		if (PictoDiffPlugin.getDefault() == null) {
-			// Standalone java
-			svgEvents = new String(Files.readAllBytes(Paths.get(svgEventsFile)));
-		}
-		else {
-			// Eclipse plugin (works, but there is probably an easier way to do this?)
-			svgEvents = new String(Files.readAllBytes(Paths.get(
-					FileLocator.resolve(PictoDiffPlugin.getDefault().getBundle().getEntry(svgEventsFile)).getPath())));
-		}
-		diffView.setPromise(new StaticContentPromise(resultDot + svgEvents));
+		diffView.setPromise(new DotDiffContentPromise(this));
 		diffView.setFormat("html");
 		diffView.setIcon("diagram-ff0000");
+	}
+
+	public static String getSvgEvents() throws IOException {
+		if (svgEvents == null) {
+			if (PictoDiffPlugin.getDefault() == null) {
+				// Standalone java
+				svgEvents = new String(Files.readAllBytes(Paths.get(SVG_EVENTS_FILE)));
+			}
+			else {
+				// Eclipse plugin (works, but there is probably an easier way to do this?)
+				svgEvents = new String(Files.readAllBytes(Paths.get(FileLocator.resolve(
+						PictoDiffPlugin.getDefault().getBundle().getEntry(SVG_EVENTS_FILE)).getPath())));
+			}
+		}
+		return svgEvents;
 	}
 }
