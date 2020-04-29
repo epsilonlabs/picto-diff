@@ -123,7 +123,7 @@ public class ViewTreeMerger {
 			diffView.setPromise(new StaticContentPromise("Some viewtree empty"));
 			diffView.setFormat("text");
 		}
-		else if (left.getPromise().getContent().equals(right.getPromise().getContent())) {
+		else if (contentEquals(left, right)) {
 			diffView.setName(String.format("%s (Same)", diffView.getName()));
 		}
 		else {
@@ -149,6 +149,14 @@ public class ViewTreeMerger {
 				}
 			}
 		}
+	}
+
+	private static boolean contentEquals(ViewTree left, ViewTree right) throws Exception {
+		// omit any temporary files in the comparison
+		String tmpFilePattern = "picto\\d+";
+		String leftContent = left.getPromise().getContent().replaceAll(tmpFilePattern, "");
+		String rightContent = right.getPromise().getContent().replaceAll(tmpFilePattern, "");
+		return leftContent.equals(rightContent);
 	}
 
 	private static DiffEngineFactory getDiffEngineFactory(String diffEngineName) {
