@@ -7,7 +7,10 @@
         SVGDoc.setAttribute("onmouseout", "mouseOut(evt)");
     });
 
-    var selectionColor = "green";
+    var selectionColor = "orange";
+    // change the stroke of polygons except transparent ones
+    var transparentColor = "transparent";
+    var diffPrefix = "_";
 
     function mouseOver(evt) {
         var element = evt.target;
@@ -20,29 +23,29 @@
                     title = children[i].childNodes[0].nodeValue;
                 }
                 if (children[i] instanceof SVGPolygonElement) {
-                    children[i].setAttribute("fill", selectionColor);
+                    if (children[i].getAttribute("stroke") != transparentColor) {
+                        children[i].setAttribute("stroke", selectionColor);
+                    }
                 }
             }
             var nodes = document.getElementsByClassName("node");
             var index = -1;
-            for (var i = 0; i < nodes.length; i++) {
+            for (var i = 0; i < nodes.length && index != i; i++) {
                 for (var j = 0; j < nodes[i].childNodes.length; j++) {
                     if (nodes[i].childNodes[j] instanceof SVGTitleElement) {
-                        if (title[0] == "_") {
-                            if ((title) == "_" + nodes[i].childNodes[j].childNodes[0].nodeValue) {
-                                index = i;
-                            }
+                        var otherTitle = nodes[i].childNodes[j].childNodes[0].nodeValue;
+                        if (title == (diffPrefix + otherTitle)) {
+                            index = i;
                         }
-                        else {
-                            if (("_" + title) == nodes[i].childNodes[j].childNodes[0].nodeValue) {
-                                index = i;
-                            }
+                        else if ((diffPrefix + title) == otherTitle) {
+                            index = i;
                         }
                     }
                     if (nodes[i].childNodes[j] instanceof SVGPolygonElement) {
                         if (index == i) {
-                            nodes[i].childNodes[j].setAttribute("fill", selectionColor);
-                            break;
+                            if (nodes[i].childNodes[j].getAttribute("stroke") != transparentColor) {
+                                nodes[i].childNodes[j].setAttribute("stroke", selectionColor);
+                            }
                         }
                     }
                 }
@@ -61,29 +64,28 @@
                     title = children[i].childNodes[0].nodeValue;
                 }
                 if (children[i] instanceof SVGPolygonElement) {
-                    children[i].setAttribute("fill", "none");
+                    if (children[i].getAttribute("stroke") != transparentColor) {
+                        children[i].setAttribute("stroke", "black");
+                    }
                 }
             }
             var nodes = document.getElementsByClassName("node");
             var index = -1;
-            for (var i = 0; i < nodes.length; i++) {
+            for (var i = 0; i < nodes.length && index != i; i++) {
                 for (var j = 0; j < nodes[i].childNodes.length; j++) {
                     if (nodes[i].childNodes[j] instanceof SVGTitleElement) {
-                        if (title[0] == "_") {
-                            if ((title) == "_" + nodes[i].childNodes[j].childNodes[0].nodeValue) {
-                                index = i;
-                            }
-                        }
-                        else {
-                            if (("_" + title) == nodes[i].childNodes[j].childNodes[0].nodeValue) {
-                                index = i;
-                            }
+                        var otherTitle = nodes[i].childNodes[j].childNodes[0].nodeValue;
+                        if (title == (diffPrefix + otherTitle)) {
+                            index = i;
+                        } else if ((diffPrefix + title) == otherTitle) {
+                            index = i;
                         }
                     }
                     if (nodes[i].childNodes[j] instanceof SVGPolygonElement) {
                         if (index == i) {
-                            nodes[i].childNodes[j].setAttribute("fill", "none");
-                            break;
+                            if (nodes[i].childNodes[j].getAttribute("stroke") != transparentColor) {
+                                nodes[i].childNodes[j].setAttribute("stroke", "black");
+                            }
                         }
                     }
                 }
