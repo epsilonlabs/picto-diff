@@ -805,17 +805,8 @@ public class DotDiffEngine implements DiffEngine {
 		return attrs;
 	}
 	
-	public void serialise() throws IOException {
-	    Graphviz.fromGraph(result).render(Format.DOT).toFile(new File(context.getSerialise_dot()));
-	    Graphviz.fromGraph(result).width(700).render(Format.SVG).toFile(new File(context.getSerialise_image()));
-	}
-	
 	public String getSVGString() {
 		 return Graphviz.fromGraph(result).render(Format.SVG).toString();
-	}
-	
-	public void saveSVGFile(File file) throws IOException {
-	    Graphviz.fromGraph(result).render(Format.SVG).toFile(file);
 	}
 	
 	private Link linkCrossCluster(MutableGraph graph, MutableNode fromNode, MutableNode toNode) {
