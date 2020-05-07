@@ -16,7 +16,7 @@ public class DotDiffContentPromise implements ContentPromise {
 		if (content == null) {
 			engine.load();
 			engine.compare();
-			content = engine.getSVGString() + DotDiffEngine.getSvgEvents();
+			content = engine.getDotString();
 		}
 		return content;
 	}

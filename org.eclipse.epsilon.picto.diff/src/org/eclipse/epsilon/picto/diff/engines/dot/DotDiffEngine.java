@@ -29,8 +29,11 @@ import org.eclipse.epsilon.picto.diff.engines.dot.util.PictoDiffValidator;
 import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
 import guru.nidi.graphviz.model.Link;
+import guru.nidi.graphviz.model.LinkSource;
+import guru.nidi.graphviz.model.LinkTarget;
 import guru.nidi.graphviz.model.MutableGraph;
 import guru.nidi.graphviz.model.MutableNode;
+import guru.nidi.graphviz.model.Port;
 import guru.nidi.graphviz.model.PortNode;
 
 public class DotDiffEngine implements DiffEngine {
@@ -42,7 +45,10 @@ public class DotDiffEngine implements DiffEngine {
 	public enum DISPLAY_MODE {ALL, CHANGED};
 	private enum ADD_MODE {ADDED, CHANGED, REMOVED, NORMAL};
 	protected DotDiffContext context = null;
-	protected boolean linkClusters = true;
+	// if true, cluster graphs are linked instead of directly linking nodes
+	// if linking clusters, ports would not work properly
+	// TODO: determine if this is useful for some situation, and delete if not
+	protected boolean linkClusters = false;
 	
 	protected MutableGraph source_temp;
 	protected MutableGraph target_temp;
@@ -69,7 +75,7 @@ public class DotDiffEngine implements DiffEngine {
 
 		String filesLocationFormat = "files/%s";
 		String outputFolder = "diffResult";
-		String outputLocationFormat = outputFolder + "/%s-diffResult.html";
+		String outputLocationFormat = outputFolder + "/%s-diffResult.dot";
 
 		File directory = new File(outputFolder);
 		if (!directory.exists()) {
@@ -136,6 +142,7 @@ public class DotDiffEngine implements DiffEngine {
 			if (context.loadGraphs()) {
 				result = mutGraph();
 				result.setName("pdiff");
+				
 				source_temp = mutGraph();
 				source_temp.setDirected(true);
 				source_temp.setName("left");
@@ -219,8 +226,10 @@ public class DotDiffEngine implements DiffEngine {
 				MutableNode linkTarget_targetTemp =
 						addIfNotFoundInTargetTemp(linkTarget, ADD_MODE.NORMAL);
 
-				Link link = linkCrossCluster(
-						target_temp, addedNode_targetTemp, linkTarget_targetTemp);
+				Link link = null;
+				link = link(target_temp,
+						addedNode_targetTemp, linkTarget_targetTemp,
+						addedLink.from(), addedLink.to());
 				copyLinkAttributes(link, addedLink);
 				DotDiffUtil.paintGreen(link);
 			}
@@ -314,8 +323,9 @@ public class DotDiffEngine implements DiffEngine {
 			// the link source is current left node
 			MutableNode linkSource_sourceTemp = addIfNotFoundInSourceTemp(left_node);
 			
-			Link right_link = linkCrossCluster(
-					source_temp, linkSource_sourceTemp, linkTarget_sourceTemp);
+			Link right_link = link(source_temp,
+					linkSource_sourceTemp, linkTarget_sourceTemp,
+					changed_link.from(), changed_link.to());
 			copyLinkAttributes(right_link, changed_link);
 		}
 
@@ -328,8 +338,9 @@ public class DotDiffEngine implements DiffEngine {
 			//add the source to the right temp graph too (i.e. right_node)
 			MutableNode linkSource_targetTemp = addIfNotFoundInTargetTemp(right_node, ADD_MODE.NORMAL);
 
-			Link right_link = linkCrossCluster(
-					target_temp, linkSource_targetTemp, linkTarget_targetTemp);
+			Link right_link = link(target_temp,
+					linkSource_targetTemp, linkTarget_targetTemp,
+					changed_link.from(), changed_link.to());
 			copyLinkAttributes(right_link, changed_link);
 			DotDiffUtil.paintOrange(right_link);
 		}
@@ -344,8 +355,9 @@ public class DotDiffEngine implements DiffEngine {
 			MutableNode leftLinkTarget = findLinkTarget(context.getSourceGraph(), removed_link);
 			MutableNode leftLinkTarget_sourceTemp = addIfNotFoundInSourceTemp(leftLinkTarget);
 
-			Link left_link = linkCrossCluster(
-					source_temp, leftLinkSource_sourceTemp, leftLinkTarget_sourceTemp);
+			Link left_link = link(source_temp,
+					leftLinkSource_sourceTemp, leftLinkTarget_sourceTemp,
+					removed_link.from(), removed_link.to());
 			copyLinkAttributes(left_link, removed_link);
 
 			/*
@@ -360,8 +372,9 @@ public class DotDiffEngine implements DiffEngine {
 						addIfNotFoundInTargetTemp(rightLinkTarget, ADD_MODE.NORMAL);
 
 				// the source of this link is rightNode (in targetTemp graph)
-				Link right_link = linkCrossCluster(
-						target_temp, rightNode_targetTemp, rightLinkTarget_targetTemp);
+				Link right_link = link(target_temp,
+						rightNode_targetTemp, rightLinkTarget_targetTemp,
+						removed_link.from(), removed_link.to());
 				copyLinkAttributes(right_link, removed_link);
 				DotDiffUtil.paintRed(right_link);
 			}
@@ -371,8 +384,9 @@ public class DotDiffEngine implements DiffEngine {
 						addIfNotFoundInTargetTemp(rightLinkTarget, ADD_MODE.NORMAL);
 
 				// the source of this link is rightNode (in targetTemp graph)
-				Link right_link = linkCrossCluster(
-						target_temp, rightNode_targetTemp, rightLinkTarget_targetTemp);
+				Link right_link = link(target_temp,
+						rightNode_targetTemp, rightLinkTarget_targetTemp,
+						removed_link.from(), removed_link.to());
 				copyLinkAttributes(right_link, removed_link);
 				DotDiffUtil.paintRed(right_link);
 			}
@@ -529,27 +543,24 @@ public class DotDiffEngine implements DiffEngine {
 		return (HashSet<MutableNode>) context.getTargetGraph().rootNodes();
 	}
 	
-	public MutableNode findNodeInSourceTemp(MutableNode node) {
-		for (MutableGraph g : source_temp.graphs()) {
+	private MutableNode findNodeByName(String nodeName, MutableGraph graph) {
+		for (MutableGraph g : graph.graphs()) {
 			for (MutableNode otherNode : g.rootNodes()) {
-				if (equalsByName(node, otherNode)) {
+				if (otherNode.name().value().equals(nodeName)) {
 					return otherNode;
 				}
 			}
 		}
 		return null;
 	}
+
+	public MutableNode findNodeInSourceTemp(MutableNode node) {
+		return findNodeByName(node.name().value(), source_temp);
+	}
 	
 	public MutableNode findNodeInTargetTemp(MutableNode node) {
 		String prefixedName = DotDiffIdUtil.getPrefixedName(node);
-		for (MutableGraph g : target_temp.graphs()) {
-			for(MutableNode otherNode: g.rootNodes()) {
-				if (otherNode.name().value().equals(prefixedName)) {
-					return otherNode;
-				}
-			}
-		}
-		return null;
+		return findNodeByName(prefixedName, target_temp);
 	}
 	
 	public boolean compareLink(MutableNode ln, MutableNode rn, Link s, Link t) {
@@ -591,15 +602,15 @@ public class DotDiffEngine implements DiffEngine {
 		return left.name().value().equals(right.name().value());
 	}
 
-	public MutableNode findNode(MutableNode node, Collection<MutableNode> nodeCollection) {
-		for(MutableNode n: nodeCollection) {
+	private MutableNode findNode(MutableNode node, Collection<MutableNode> nodeCollection) {
+		for (MutableNode n : nodeCollection) {
 			if (equalsByName(node, n)) {
 				return n;
 			}
 		}
 		return null;
 	}
-	
+
 	public Link findLink(MutableNode n, String name) {
 		//this is assuming that links have 'name'
 		for(Link l: n.links()) {
@@ -809,6 +820,10 @@ public class DotDiffEngine implements DiffEngine {
 		 return Graphviz.fromGraph(result).render(Format.SVG).toString();
 	}
 	
+	public String getDotString() {
+		return Graphviz.fromGraph(result).render(Format.DOT).toString();
+	}
+	
 	private Link linkCrossCluster(MutableGraph graph, MutableNode fromNode, MutableNode toNode) {
 		if(linkClusters) {
 			//the mechanism is funny, may need to report an issue.
@@ -833,14 +848,85 @@ public class DotDiffEngine implements DiffEngine {
 		}
 		else {
 			//the mechanism is funny, may need to report an issue.
+			// fonso: I think the funny part here refers to the clusters of each
+			//   node being automatically merged when using addLink directly
+			//   over fromNode, hence the need of creating an intermediate node.
+			//   I might need to ask Will about this.
 			MutableNode node = mutNode(fromNode.name().value());
-			node.addLink(DotDiffIdUtil.getPrefixedName(toNode));
+			node.addLink(toNode.name().value());
 			Link link = node.links().get(0);
 			graph.rootNodes().add(node);
 			return link;
 		}
 	}
 	
+	/**
+	 * This linking method takes extra precautions to correctly link nodes
+	 * through ports (if present)
+	 * 
+	 * @param graph      The graph containing the nodes
+	 * @param sourceNode Source node
+	 * @param targetNode Target node
+	 * @param linkSource Link source (might be a port)
+	 * @param linkTarget Link target (might be a port)
+	 * @return
+	 */
+	private Link link(MutableGraph graph,
+			MutableNode sourceNode, MutableNode targetNode,
+			LinkSource linkSource, LinkTarget linkTarget) {
+
+		//the mechanism is funny, may need to report an issue. (Will's)
+		// fonso: I think the funny part here refers to the clusters of each
+		//   node being strangely merged when using addLink directly
+		//   over sourceNode, hence the need of creating an aux node.
+		//   Also, we need to add this node to the graph, or the link won't show.
+		//   I might need to ask Will about this.
+
+		// Note: linkSource and linkTarget are obtained from the original link,
+		// i.e. they are elements from the original graphs (the ones living in
+		// DotDiffContext). These elements should be used to get the port details
+		// but never as source of target of the new link 
+
+		// Strangely, a node does not have a list of ports, the port information
+		// is only present in the linksource and linktarget elems (or, in the 
+		// node's label, but that would require parsing it).
+
+		MutableNode auxNode = mutNode(sourceNode.name().value());
+		graph.rootNodes().add(auxNode);
+		if (linkSource instanceof PortNode) {
+			// linkSource is a port of sourceNode
+			Port sourcePort = ((PortNode) linkSource).port();
+			PortNode sourcePortNode = auxNode.port(sourcePort.record(), sourcePort.compass());
+			sourcePortNode.addTo(graph);
+			if (linkTarget instanceof PortNode) {
+				// linkTarget is a port of targetNode
+				Port targetPort = ((PortNode) linkTarget).port();
+				PortNode targetPortNode = targetNode.port(targetPort.record(), targetPort.compass());
+				auxNode.addLink(sourcePortNode.linkTo(targetPortNode));
+			}
+			else {
+				// linkTarget == targetNode
+				auxNode.addLink(sourcePortNode.linkTo(targetNode));
+			}
+		}
+		else {
+			// linkSource == sourceNode
+			if (linkTarget instanceof PortNode) {
+				// linkTarget is a port of targetNode
+				Port targetPort = ((PortNode) linkTarget).port();
+				PortNode targetPortNode = targetNode.port(targetPort.record(), targetPort.compass());
+				auxNode.addLink(targetPortNode);
+			}
+			else {
+				// linkTarget == targetNode
+				auxNode.addLink(targetNode);
+			}
+		}
+		// at this point auxNode contains a single link (the created one)
+		//   no mather the route followed above
+		return auxNode.links().get(0);
+	}
+
 	public void addFeedback(String feedback) {
 		feedbacks.add(feedback);
 	}
@@ -866,7 +952,7 @@ public class DotDiffEngine implements DiffEngine {
 	public void diff(ViewTree diffView, ViewTree left, ViewTree right) throws Exception {
 		this.context = new DotDiffContext(left.getPromise().getContent(), right.getPromise().getContent());
 		diffView.setPromise(new DotDiffContentPromise(this));
-		diffView.setFormat("html");
+		diffView.setFormat("graphviz-dot");
 		diffView.setIcon("diagram-ff0000");
 	}
 
