@@ -231,7 +231,7 @@ public class DotDiffEngine implements DiffEngine {
 						addedNode_targetTemp, linkTarget_targetTemp,
 						addedLink.from(), addedLink.to());
 				copyLinkAttributes(link, addedLink);
-				DotDiffUtil.paintGreen(link);
+				DotDiffUtil.paintAdded(link);
 			}
 		}
 	}
@@ -259,10 +259,10 @@ public class DotDiffEngine implements DiffEngine {
 				//paint orange for changed attributes
 				for(String s: getChangedAttrs(right_node)) {
 					if (s.equals("label")) {
-						DotDiffUtil.paintLabelOrange(right_node);
+						DotDiffUtil.paintLabelChanged(right_node);
 					}
 					else {
-						DotDiffUtil.paintOrange(right_node);
+						DotDiffUtil.paintChanged(right_node);
 					}
 				}
 				// In this nidi3 library adding a node = adding
@@ -342,7 +342,7 @@ public class DotDiffEngine implements DiffEngine {
 					linkSource_targetTemp, linkTarget_targetTemp,
 					changed_link.from(), changed_link.to());
 			copyLinkAttributes(right_link, changed_link);
-			DotDiffUtil.paintOrange(right_link);
+			DotDiffUtil.paintChanged(right_link);
 		}
 
 		//for all removed links
@@ -376,7 +376,7 @@ public class DotDiffEngine implements DiffEngine {
 						rightNode_targetTemp, rightLinkTarget_targetTemp,
 						removed_link.from(), removed_link.to());
 				copyLinkAttributes(right_link, removed_link);
-				DotDiffUtil.paintRed(right_link);
+				DotDiffUtil.paintDeleted(right_link);
 			}
 			else {
 				rightLinkTarget = findLinkTarget(context.getSourceGraph(), removed_link);
@@ -388,7 +388,7 @@ public class DotDiffEngine implements DiffEngine {
 						rightNode_targetTemp, rightLinkTarget_targetTemp,
 						removed_link.from(), removed_link.to());
 				copyLinkAttributes(right_link, removed_link);
-				DotDiffUtil.paintRed(right_link);
+				DotDiffUtil.paintDeleted(right_link);
 			}
 		}
 
@@ -416,7 +416,7 @@ public class DotDiffEngine implements DiffEngine {
 			Link link = linkCrossCluster(
 					target_temp, linkSource_targetTemp, linkTarget_targetTemp);
 			copyLinkAttributes(link, right_link);
-			DotDiffUtil.paintGreen(link);
+			DotDiffUtil.paintAdded(link);
 
 			// for the added link, add nodes that existed in previous version to the view (sourceTemp)
 			if (findNode(linkSource, addedNodes) == null) {
@@ -485,13 +485,13 @@ public class DotDiffEngine implements DiffEngine {
 		DotDiffIdUtil.prefixNode(copy);
 		MutableGraph g = mutGraph();
 		if (mode == ADD_MODE.ADDED) {
-			DotDiffUtil.paintGreen(g);
+			DotDiffUtil.paintAdded(g);
 		}
 		else if (mode == ADD_MODE.CHANGED) {
-			DotDiffUtil.paintOrange(g);
+			DotDiffUtil.paintChanged(g);
 		}
 		else if (mode == ADD_MODE.REMOVED) {
-			DotDiffUtil.paintRed(g);
+			DotDiffUtil.paintDeleted(g);
 		}
 		else {
 			

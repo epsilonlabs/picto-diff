@@ -16,6 +16,10 @@ import guru.nidi.graphviz.parse.Parser;
 
 public class DotDiffUtil {
 
+	public static final String ADDED = "#228833";
+	public static final String CHANGED = "#C2952D";
+	public static final String DELETED = "#CC3311";
+
 	public static void removeNode(MutableGraph graph, MutableNode node) {
 		graph.rootNodes().remove(node);
 	}
@@ -106,7 +110,7 @@ public class DotDiffUtil {
 		link.attrs().add("constraint", false);
 		link.attrs().add("style", "dashed");
 		link.attrs().add("dir", "forward");
-		link.attrs().add("color", "orange");
+		link.attrs().add("color", CHANGED);
 		graph.rootNodes().add(node);
 	}
 	
@@ -120,60 +124,52 @@ public class DotDiffUtil {
 		graph.rootNodes().add(node);
 	}
 	
-	public static void paintRed(MutableGraph graph) {
-		graph.graphAttrs().add("color", "red");
+	public static void paintDeleted(MutableGraph graph) {
+		graph.graphAttrs().add("color", DELETED);
 		graph.graphAttrs().add("style", "dashed");
-		graph.graphAttrs().add("fontcolor", "red");
+		graph.graphAttrs().add("fontcolor", DELETED);
 	}
 	
-	public static void paintOrange(MutableGraph graph) {
-		graph.graphAttrs().add("color", "orange");
+	public static void paintChanged(MutableGraph graph) {
+		graph.graphAttrs().add("color", CHANGED);
 	}
 	
-	public static void paintGreen(MutableGraph graph) {
-		graph.graphAttrs().add("color", "green");
+	public static void paintAdded(MutableGraph graph) {
+		graph.graphAttrs().add("color", ADDED);
 	}
 	
-	public static void paintRed(MutableNode node) {
-		node.attrs().add("color", "red");
+	public static void paintDeleted(MutableNode node) {
+		node.attrs().add("color", DELETED);
 		node.attrs().add("style", "dashed");
-		node.attrs().add("fontcolor", "red");
+		node.attrs().add("fontcolor", DELETED);
 	}
 	
-	public static void paintGreen(MutableNode node) {
-		node.attrs().add("color", "green");
+	public static void paintAdded(MutableNode node) {
+		node.attrs().add("color", ADDED);
 	}
 	
-	public static void paintOrange(MutableNode node) {
-		node.attrs().add("color", "orange");
+	public static void paintChanged(MutableNode node) {
+		node.attrs().add("color", CHANGED);
 	}
 	
-	public static void paintRed(Link link) {
-		link.attrs().add("color", "red");
+	public static void paintDeleted(Link link) {
+		link.attrs().add("color", DELETED);
 		//		link.attrs().add("style", "dashed");
-		link.attrs().add("fontcolor", "red");
+		link.attrs().add("fontcolor", DELETED);
 	}
 	
-	public static void paintGreen(Link link) {
-		link.attrs().add("color", "green");
-		link.attrs().add("fontcolor", "green");
+	public static void paintAdded(Link link) {
+		link.attrs().add("color", ADDED);
+		link.attrs().add("fontcolor", ADDED);
 	}
 	
-	public static void paintOrange(Link link) {
-		link.attrs().add("color", "orange");
-		link.attrs().add("fontcolor", "orange");
+	public static void paintChanged(Link link) {
+		link.attrs().add("color", CHANGED);
+		link.attrs().add("fontcolor", CHANGED);
 	}
 	
-	public static void paintLabelRed(MutableNode node) {
-		node.attrs().add("fontcolor", "red");
-	}
-	
-	public static void paintLabelGreen(MutableNode node) {
-		node.attrs().add("fontcolor", "green");
-	}
-	
-	public static void paintLabelOrange(MutableNode node) {
-		node.attrs().add("fontcolor", "orange");
+	public static void paintLabelChanged(MutableNode node) {
+		node.attrs().add("fontcolor", CHANGED);
 	}
 	
 	public static void main(String[] args) throws IOException {
@@ -183,11 +179,10 @@ public class DotDiffUtil {
 	    MutableNode node = DotDiffUtil.getNodeRec(g, "n2");
 	    MutableNode node3 = DotDiffUtil.getNodeRec(g, "n3");
 	    MutableNode node4 = DotDiffUtil.getNodeRec(g, "n4");
-	    DotDiffUtil.paintRed(node.links().get(0));
-	    DotDiffUtil.paintRed(node);
-	    DotDiffUtil.paintLabelRed(node);
-	    DotDiffUtil.paintOrange(node3);
-	    DotDiffUtil.paintGreen(node4);
+	    DotDiffUtil.paintDeleted(node.links().get(0));
+	    DotDiffUtil.paintDeleted(node);
+	    DotDiffUtil.paintChanged(node3);
+	    DotDiffUtil.paintAdded(node4);
 	    
 	    DotDiffUtil.linkCrossCluster(g, "n1",	"_n1");
 	    DotDiffUtil.linkCrossCluster(g, "n2",	"_n2");
