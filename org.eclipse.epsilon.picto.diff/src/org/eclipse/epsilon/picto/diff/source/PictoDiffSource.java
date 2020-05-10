@@ -47,7 +47,7 @@ public class PictoDiffSource extends StandalonePictoSource {
 
 	public Picto getFromSimpleFile(IFile diffFile) {
 		Picto metadata = PictoFactory.eINSTANCE.createPicto();
-		metadata.setTemplate(diffFile.getLocation().toOSString());
+		metadata.setTransformation(diffFile.getLocation().toOSString());
 		metadata.setFormat(getFormat());
 		metadata.setStandalone(true);
 		// get the two internal picto files as parameters of the Picto dom
