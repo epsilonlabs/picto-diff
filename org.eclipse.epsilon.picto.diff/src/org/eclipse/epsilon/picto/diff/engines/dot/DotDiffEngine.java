@@ -73,8 +73,8 @@ public class DotDiffEngine implements DiffEngine {
 	
 	public static void main(String[] args) throws Exception {
 
-		String filesLocationFormat = "files/%s";
-		String outputFolder = "diffResult";
+		String filesLocationFormat = "files/dotDiffEngine/%s";
+		String outputFolder = "diffResult/dotDiffEngine";
 		String outputLocationFormat = outputFolder + "/%s-diffResult.dot";
 
 		File directory = new File(outputFolder);
