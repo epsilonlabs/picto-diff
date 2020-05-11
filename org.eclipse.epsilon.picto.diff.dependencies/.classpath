@@ -19,11 +19,11 @@
 	<classpathentry exported="true" kind="lib" path="target/logback-core-1.2.3.jar"/>
 	<classpathentry exported="true" kind="lib" path="target/nashorn-promise-0.1.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="target/opentest4j-1.1.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="target/org.eclipse.epsilon.picto.diff.graphviz-0.0.1-SNAPSHOT.jar"/>
 	<classpathentry exported="true" kind="lib" path="target/slf4j-api-1.7.26.jar"/>
 	<classpathentry exported="true" kind="lib" path="target/svgSalamander-1.1.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="target/viz.js-2.1.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="target/xmlgraphics-commons-2.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/jsoup-1.13.1.jar" sourcepath="target/jsoup-1.13.1-sources.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8">
 		<attributes>
 			<attribute name="maven.pomderived" value="true"/>
