@@ -1,0 +1,7 @@
+<?nsuri picto?>
+<picto standalone="true">
+	<parameter name="left" file="html/risks-baseline.flexmi.picto"/>
+	<parameter name="right" file="html/risks-addRisks.flexmi.picto"/>
+
+	<parameter name="diffEngine" value="html"/>
+</picto>

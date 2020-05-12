@@ -1,0 +1,12 @@
+<?nsuri risks?>
+<?render-egx platform:/resource/org.eclipse.epsilon.examples.flexmi.risks/risks2html/risks2html.egx?>
+<system>
+	<r Id="RNew1" t="A new (first) low-significance risk" lik="l" sev="m"/>
+	<r Id="R1" t="A low-significance risk" lik="l" sev="m"/>
+	<r Id="RNew2" t="A new (and interleaved) low-significance risk" lik="l" sev="m"/>
+	<r Id="R12" t="Another low-significance risk" lik="l" sev="m"/>
+	<r Id="RNew3" t="A new (last) low-significance risk" lik="l" sev="m"/>
+	<r Id="R2" t="An important risk" lik="m" sev="m"/>
+	<r Id="R3" t="A critical risk" lik="m" sev="h"/>
+	<r Id="R4" t="A closed critical risk" lik="h" sev="m" closed="true"/>
+</system>

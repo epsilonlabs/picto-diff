@@ -1,0 +1,17 @@
+<?nsuri risks?>
+<?render-egx platform:/resource/org.eclipse.epsilon.examples.flexmi.risks/risks2html/risks2html.egx?>
+<!--
+Summary of changes:
+	- Move R2 to the end of the list (causes no problem)
+	- Close R2
+	- Change R1 to a critical one (changes view: deleted in low; added to high)
+	- Change R3 likelihood/severities (but withough changing it from high risk)
+	- Reopen R4
+-->
+<system>
+	<r Id="R1" t="A low-significance risk" lik="h" sev="m"/>
+	<r Id="R12" t="Another low-significance risk" lik="l" sev="m"/>
+	<r Id="R3" t="A critical risk" lik="h" sev="h"/>
+	<r Id="R4" t="A closed critical risk" lik="h" sev="m"/>
+	<r Id="R2" t="An important risk" lik="m" sev="m" closed="true"/>
+</system>
