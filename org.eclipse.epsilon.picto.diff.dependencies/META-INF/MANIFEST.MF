@@ -1,7 +1,7 @@
 Automatic-Module-Name: org.eclipse.epsilon.picto.diff.dependencies
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: org.eclipse.epsilon.picto.diff.dependencies
+Bundle-Name: Picto-Diff Dependencies
 Bundle-SymbolicName: org.eclipse.epsilon.picto.diff.dependencies;singleton:=true
 Bundle-Version: 0.1.0.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
@@ -15,6 +15,7 @@ Bundle-ClassPath: target/apiguardian-api-1.0.0.jar,
  target/j2v8_win32_x86_64-4.6.0.jar,
  target/j2v8_win32_x86-4.6.0.jar,
  target/jcl-over-slf4j-1.7.26.jar,
+ target/jsoup-1.13.1.jar,
  target/jsr305-3.0.2.jar,
  target/jul-to-slf4j-1.7.26.jar,
  target/junit-platform-commons-1.4.2.jar,
