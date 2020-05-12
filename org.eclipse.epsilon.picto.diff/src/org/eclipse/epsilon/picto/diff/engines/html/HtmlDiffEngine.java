@@ -23,6 +23,11 @@ public class HtmlDiffEngine implements DiffEngine {
 	private static final String DIFF_ID = "pictoid";
 	private static final String DIFF_ELEMS_SELECTOR = String.format("[%s]", DIFF_ID);
 
+	private static final String ADDED_CLASS = "added";
+	private static final String PREVIOUS_CHANGED_CLASS = "previouschanged";
+	private static final String CURRENT_CHANGED_CLASS = "currentchanged";
+	private static final String DELETED_CLASS = "deleted";
+
 	// html diff elements to compare and merge; traversed at the same time
 	private Elements leftDiffElems;
 	private Elements rightDiffElems;
@@ -90,7 +95,7 @@ public class HtmlDiffEngine implements DiffEngine {
 		// add the whole element as new
 		// TODO: update this method if support for nested diffelements is needed
 		Element addedCopy = addedElem.clone();
-		addedCopy.addClass("added");
+		addedCopy.addClass(ADDED_CLASS);
 		
 		appendElement(diffDoc, addedElem.parents(), addedCopy);
 	}
@@ -99,11 +104,11 @@ public class HtmlDiffEngine implements DiffEngine {
 		// add the previous element as previous, and the new as new
 		// TODO: update this method if support for nested diffelements is needed
 		Element leftCopy = leftElem.clone();
-		leftCopy.addClass("previousModified");
+		leftCopy.addClass(PREVIOUS_CHANGED_CLASS);
 		appendElement(diffDoc, leftElem.parents(), leftCopy);
 
 		Element rightCopy = rightElem.clone();
-		rightCopy.addClass("currentModified");
+		rightCopy.addClass(CURRENT_CHANGED_CLASS);
 		appendElement(diffDoc, rightElem.parents(), rightCopy);
 	}
 
@@ -111,7 +116,7 @@ public class HtmlDiffEngine implements DiffEngine {
 		// add the whole element as deleted.
 		// TODO: update this method if support for nested diffelements is needed
 		Element deletedCopy = deletedElem.clone();
-		deletedCopy.addClass("deleted");
+		deletedCopy.addClass(DELETED_CLASS);
 
 		appendElement(diffDoc, deletedElem.parents(), deletedCopy);
 	}
@@ -224,8 +229,10 @@ public class HtmlDiffEngine implements DiffEngine {
 		rightDiffIndex = 0;
 
 		Document diffDoc = leftDoc.clone();
+		includeDiffClasses(diffDoc.head());
 		// remove previous diffElements from diffDoc (get "empty" html skeleton)
 		diffDoc.select(DIFF_ELEMS_SELECTOR).remove();
+
 
 		while (leftDiffIndex < leftDiffElems.size() && rightDiffIndex < rightDiffElems.size()) {
 			compareElement(diffDoc, leftDiffElems.get(leftDiffIndex), rightDiffElems.get(rightDiffIndex));
@@ -237,6 +244,22 @@ public class HtmlDiffEngine implements DiffEngine {
 			compareElement(diffDoc, null, rightDiffElems.get(rightDiffIndex));
 		}
 		return diffDoc;
+	}
+
+	private void includeDiffClasses(Element head) {
+		// TODO: allow users to define and provide custom classes
+		head.append(String.format(
+				"<style>.%s{border: dashed #228833; background: #defade}</style>",
+				ADDED_CLASS));
+		head.append(String.format(
+				"<style>.%s{border: dashed grey; background: #f6f6f6}</style>",
+				PREVIOUS_CHANGED_CLASS));
+		head.append(String.format(
+				"<style>.%s{border: dashed #C2952D; background: #f3ead5}</style>",
+				CURRENT_CHANGED_CLASS));
+		head.append(String.format(
+				"<style>.%s{border: dashed #CC3311; background: #f5dede}</style>",
+				DELETED_CLASS));
 	}
 
 	private void compareElement(Document diffDoc, Element currentLeft, Element currentRight) {
@@ -295,6 +318,6 @@ public class HtmlDiffEngine implements DiffEngine {
 		Document diffDoc = compare(leftDoc, rightDoc);
 		
 		diffView.setFormat("html");
-		diffView.setPromise(new StaticContentPromise(diffDoc.toString()));
+		diffView.setPromise(new StaticContentPromise(diffDoc.html()));
 	}
 }
