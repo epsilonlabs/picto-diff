@@ -27,6 +27,7 @@ public class HtmlDiffEngine implements DiffEngine {
 	private static final String PREVIOUS_CHANGED_CLASS = "previouschanged";
 	private static final String CURRENT_CHANGED_CLASS = "currentchanged";
 	private static final String DELETED_CLASS = "deleted";
+	private static final String UNCHANGED_CLASS = "unchanged";
 
 	// html diff elements to compare and merge; traversed at the same time
 	private Elements leftDiffElems;
@@ -119,6 +120,15 @@ public class HtmlDiffEngine implements DiffEngine {
 		deletedCopy.addClass(DELETED_CLASS);
 
 		appendElement(diffDoc, deletedElem.parents(), deletedCopy);
+	}
+
+	private void unchangedElement(Document diffDoc, Element unchangedElem) {
+		// add the whole element as unchanged.
+		// TODO: update this method if support for nested diffelements is needed
+		Element unchangedCopy = unchangedElem.clone();
+		unchangedCopy.addClass(UNCHANGED_CLASS);
+
+		appendElement(diffDoc, unchangedElem.parents(), unchangedCopy);
 	}
 
 	/**
@@ -260,6 +270,9 @@ public class HtmlDiffEngine implements DiffEngine {
 		head.append(String.format(
 				"<style>.%s{border: dashed #CC3311; background: #f5dede}</style>",
 				DELETED_CLASS));
+		head.append(String.format(
+				"<style>.%s{color: grey}</style>",
+				UNCHANGED_CLASS));
 	}
 
 	private void compareElement(Document diffDoc, Element currentLeft, Element currentRight) {
@@ -268,6 +281,7 @@ public class HtmlDiffEngine implements DiffEngine {
 				if (equalDiffElements(currentLeft, currentRight)) {
 					if (currentLeft.hasSameValue(currentRight)) {
 						// left and right elements are the same: omit them
+						unchangedElement(diffDoc, currentLeft);
 					}
 					else {
 						// some changes are present
