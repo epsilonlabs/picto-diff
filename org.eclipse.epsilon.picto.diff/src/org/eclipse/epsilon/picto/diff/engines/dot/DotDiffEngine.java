@@ -142,10 +142,12 @@ public class DotDiffEngine implements DiffEngine {
 			if (context.loadGraphs()) {
 				result = mutGraph();
 				result.setName("pdiff");
+				result.graphAttrs().add(context.getSourceGraph().graphAttrs());
 				
 				source_temp = mutGraph();
 				source_temp.setDirected(true);
 				source_temp.setName("left");
+				source_temp.graphAttrs().add(context.getSourceGraph().graphAttrs());
 				source_temp.graphAttrs().add("label", "Previous Version");
 				source_temp.setCluster(true);
 				source_temp.addTo(result);
@@ -153,6 +155,7 @@ public class DotDiffEngine implements DiffEngine {
 				target_temp = mutGraph();
 				target_temp.setDirected(true);
 				target_temp.setName("right");
+				target_temp.graphAttrs().add(context.getTargetGraph().graphAttrs());
 				target_temp.graphAttrs().add("label", "Current Version");
 				target_temp.setCluster(true);
 				target_temp.addTo(result);
