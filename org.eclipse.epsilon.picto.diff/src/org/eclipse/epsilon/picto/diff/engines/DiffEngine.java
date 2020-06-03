@@ -6,5 +6,5 @@ public interface DiffEngine {
 
 	public boolean supports(String format);
 
-	public void diff(ViewTree diffView, ViewTree left, ViewTree right) throws Exception;
+	public void diff(ViewTree diffView, ViewTree oldView, ViewTree newView) throws Exception;
 }

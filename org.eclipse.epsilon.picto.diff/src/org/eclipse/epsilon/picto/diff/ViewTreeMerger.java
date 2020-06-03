@@ -21,48 +21,51 @@ public class ViewTreeMerger {
 					new HtmlDiffEngineFactory(),
 					new SideBySideDiffEngineFactory());
 
-	public static ViewTree diffMerge(ViewTree left, ViewTree right, String diffEngineName) throws Exception {
-		return diffMerge(new ViewTree(), Arrays.asList(""), left, right, getDiffEngineFactory(diffEngineName));
+	public static ViewTree diffMerge(ViewTree oldTree, ViewTree newTree,
+			String diffEngineName) throws Exception {
+
+		return diffMerge(new ViewTree(), Arrays.asList(""),
+				oldTree, newTree, getDiffEngineFactory(diffEngineName));
 	}
 
 	private static ViewTree diffMerge(ViewTree mergedViewTree, List<String> currentPath,
-			ViewTree left, ViewTree right, DiffEngineFactory engineFactory) throws Exception {
+			ViewTree oldTree, ViewTree newTree, DiffEngineFactory engineFactory) throws Exception {
 
 		if (currentPath.size() == 1) {
 			// compare roots of the viewtrees
-			diff(mergedViewTree, left, right, engineFactory);
+			diff(mergedViewTree, oldTree, newTree, engineFactory);
 		}
 
-		ViewTree currentLeft = left.forPath(currentPath);
-		ViewTree currentRight = right.forPath(currentPath);
-		List<ViewTree> remainingRightChildren = new ArrayList<>(currentRight.getChildren());
+		ViewTree currentOld = oldTree.forPath(currentPath);
+		ViewTree currentNew = newTree.forPath(currentPath);
+		List<ViewTree> remainingNewChildren = new ArrayList<>(currentNew.getChildren());
 
-		for (ViewTree leftChild : currentLeft.getChildren()) {
+		for (ViewTree oldChild : currentOld.getChildren()) {
 			ViewTree counterpart = null;
 			ViewTree diffView = null;
-			for (ViewTree rightChild : remainingRightChildren) {
-				if (leftChild.getName().equals(rightChild.getName())) {
-					counterpart = rightChild;
-					remainingRightChildren.remove(counterpart);
-					diffView = copy(leftChild);
-					diff(diffView, leftChild, counterpart, engineFactory);
-					if (!leftChild.getChildren().isEmpty()) {
+			for (ViewTree newChild : remainingNewChildren) {
+				if (oldChild.getName().equals(newChild.getName())) {
+					counterpart = newChild;
+					remainingNewChildren.remove(counterpart);
+					diffView = copy(oldChild);
+					diff(diffView, oldChild, counterpart, engineFactory);
+					if (!oldChild.getChildren().isEmpty()) {
 						List<String> newPath = new ArrayList<>(currentPath);
-						newPath.add(leftChild.getName());
-						diffView = diffMerge(diffView, newPath, left, right, engineFactory);
+						newPath.add(oldChild.getName());
+						diffView = diffMerge(diffView, newPath, oldTree, newTree, engineFactory);
 					}
 					break;
 				}
 			}
 			if (counterpart == null) {
 				// deleted elements
-				diffView = copy(leftChild);
-				diffView.setName(String.format("%s (Deleted)", leftChild.getName()));
+				diffView = copy(oldChild);
+				diffView.setName(String.format("%s (Deleted)", oldChild.getName()));
 			}
 			append(mergedViewTree, diffView, "");
 		}
 
-		for (ViewTree remainingChild : remainingRightChildren) {
+		for (ViewTree remainingChild : remainingNewChildren) {
 			// new elements
 			ViewTree newChild = copy(remainingChild);
 			newChild.setName(String.format("%s (New)", remainingChild.getName()));
@@ -73,6 +76,13 @@ public class ViewTreeMerger {
 		return mergedViewTree;
 	}
 
+	/**
+	 * Append an existing ViewTree as child of another
+	 * 
+	 * @param left     Parent ViewTree
+	 * @param right    The ViewTree to append as a child
+	 * @param leafName An optional name, ignored if empty
+	 */
 	public static void append(ViewTree left, ViewTree right, String leafName) {
 
 		ViewTree child = null;
@@ -114,26 +124,27 @@ public class ViewTreeMerger {
 		return copy;
 	}
 
-	private static void diff(ViewTree diffView, ViewTree left, ViewTree right, DiffEngineFactory engineFactory) throws Exception {
-		if (left.getPromise() == null && right.getPromise() == null) {
-			if (!left.getName().equals("") && !right.getName().equals("")) {
+	private static void diff(ViewTree diffView, ViewTree oldView, ViewTree newView,
+			DiffEngineFactory engineFactory) throws Exception {
+		if (oldView.getPromise() == null && newView.getPromise() == null) {
+			if (!oldView.getName().equals("") && !newView.getName().equals("")) {
 				diffView.setPromise(new StaticContentPromise("Both viewtrees empty"));
 				diffView.setFormat("text");
 			}
 		}
-		else if (left.getPromise() == null || right.getPromise() == null) {
+		else if (oldView.getPromise() == null || newView.getPromise() == null) {
 			diffView.setPromise(new StaticContentPromise("Some viewtree empty"));
 			diffView.setFormat("text");
 		}
-		else if (contentEquals(left, right)) {
+		else if (contentEquals(oldView, newView)) {
 			diffView.setName(String.format("%s (Same)", diffView.getName()));
 		}
 		else {
 			diffView.setName(String.format("%s (Modified)", diffView.getName()));
 			if (engineFactory != null) {
 				DiffEngine engine = engineFactory.createDiffEngine();
-				if (engine.supports(left.getFormat())) {
-					engine.diff(diffView, left, right);
+				if (engine.supports(oldView.getFormat())) {
+					engine.diff(diffView, oldView, newView);
 				}
 				else {
 					diffView.setPromise(new StaticContentPromise(engine.getClass().getName() +
@@ -144,8 +155,8 @@ public class ViewTreeMerger {
 			else {
 				for (DiffEngineFactory factory : DIFF_ENGINE_FACTORIES) {
 					DiffEngine engine = factory.createDiffEngine();
-					if (engine.supports(left.getFormat())) {
-						engine.diff(diffView, left, right);
+					if (engine.supports(oldView.getFormat())) {
+						engine.diff(diffView, oldView, newView);
 						break;
 					}
 				}
