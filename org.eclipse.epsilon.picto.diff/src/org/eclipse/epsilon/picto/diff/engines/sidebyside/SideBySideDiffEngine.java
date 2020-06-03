@@ -24,31 +24,32 @@ public class SideBySideDiffEngine implements DiffEngine {
 	}
 
 	@Override
-	public void diff(ViewTree diffView, ViewTree left, ViewTree right) throws Exception {
+	public void diff(ViewTree diffView, ViewTree oldView, ViewTree newView) throws Exception {
 
 		loadHeaderText();
 
 		PictoView pictoView = new PictoView();
 		pictoView.setViewRenderer(new ViewRenderer(null));
-		Iterator<ViewContent> leftViewContents = left.getContents(pictoView).iterator();
-		Iterator<ViewContent> rightViewContents = right.getContents(pictoView).iterator();
+		Iterator<ViewContent> oldViewContents = oldView.getContents(pictoView).iterator();
+		Iterator<ViewContent> newViewContents = newView.getContents(pictoView).iterator();
 
 		ViewContent diffContent = null;
 		ViewContent currentContent = null;
-		while (leftViewContents.hasNext() && rightViewContents.hasNext()) {
-			ViewContent leftContent = leftViewContents.next();
-			ViewContent rightContent = rightViewContents.next();
+		while (oldViewContents.hasNext() && newViewContents.hasNext()) {
+			ViewContent oldContent = oldViewContents.next();
+			ViewContent newContent = newViewContents.next();
 
-			SideBySideViewContent newContent = new SideBySideViewContent(
-					headerText, leftContent.getText(), rightContent.getText());
-			newContent.setLabel(leftContent.getLabel());
+			// new view on the left, old view on the right (as EGit does)
+			SideBySideViewContent combinedContent = new SideBySideViewContent(
+					headerText, newContent.getText(), oldContent.getText());
+			combinedContent.setLabel(oldContent.getLabel());
 			if (diffContent == null) {
-				diffContent = newContent;
+				diffContent = combinedContent;
 			}
 			if (currentContent != null) {
-				currentContent.setNext(newContent);
+				currentContent.setNext(combinedContent);
 			}
-			currentContent = newContent;
+			currentContent = combinedContent;
 		}
 		diffView.setFormat("html");
 		diffView.setContent(diffContent);

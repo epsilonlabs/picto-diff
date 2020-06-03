@@ -6,16 +6,21 @@
 
     .tc_iframe {
         width: 50%;
-        height: 100%;
+        height: calc(100% - 18px);
         float: left;
+        text-align: center;
+        font-style: bold;
+        font-size: 18px;
     }
 </style>
 <div class="t_container">
     <div class="tc_iframe">
+        <span>Current Version</span>
         <iframe id="leftIframe" class="ts_iframe" src="about:blank" height="100%" width="100%"></iframe>
     </div>
 
     <div class="tc_iframe">
+        <span>Previous Version</span>
         <iframe id="rightIframe" class="ts_iframe" src="about:blank" height="100%" width="100%"></iframe>
     </div>
 </div>
