@@ -52,6 +52,7 @@ public class PictoDiffSource extends StandalonePictoSource {
 		metadata.setFormat(getFormat());
 		metadata.setStandalone(true);
 		// get the two internal picto files as parameters of the Picto dom
+		// TODO: change "left" and "right" parameter names to more meaningful ones
 		try {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(diffFile.getContents(true)));
 			Parameter pLeft = PictoFactory.eINSTANCE.createParameter();
@@ -100,24 +101,24 @@ public class PictoDiffSource extends StandalonePictoSource {
 		if (project == null) {
 			return createEmptyViewTree();
 		}
-		FileWrapperEditorPart leftWrapper =
+		FileWrapperEditorPart oldVersionWrapper =
 				new FileWrapperEditorPart(project.getFile(new Path(pLeft.getFile())));
-		FileWrapperEditorPart rightWrapper =
+		FileWrapperEditorPart newVersionWrapper =
 				new FileWrapperEditorPart(project.getFile(new Path(pRight.getFile())));
 
-		PictoSource leftPictoSource = getSource(leftWrapper);
-		PictoSource rightPictoSource = getSource(rightWrapper);
+		PictoSource oldVersionSource = getSource(oldVersionWrapper);
+		PictoSource newVersionSource = getSource(newVersionWrapper);
 
-		ViewTree leftViewTree = leftPictoSource.getViewTree(leftWrapper);
-		ViewTree rightViewTree = rightPictoSource.getViewTree(rightWrapper);
-		ViewTree mergedDiffViewTree = ViewTreeMerger.diffMerge(leftViewTree, rightViewTree, diffEngine);
+		ViewTree oldTree = oldVersionSource.getViewTree(oldVersionWrapper);
+		ViewTree newTree = newVersionSource.getViewTree(newVersionWrapper);
+		ViewTree mergedDiffViewTree = ViewTreeMerger.diffMerge(oldTree, newTree, diffEngine);
 
 		ViewTree viewTree = new ViewTree();
 		// set here base uri to find pictodiff icons
 		viewTree.getBaseUris().add(new URI("platform:/plugin/org.eclipse.epsilon.picto.diff/icons/"));
 		ViewTreeMerger.append(viewTree, mergedDiffViewTree, "Differences");
-		ViewTreeMerger.append(viewTree, leftViewTree, "Original Left");
-		ViewTreeMerger.append(viewTree, rightViewTree, "Original Right");
+		ViewTreeMerger.append(viewTree, oldTree, "Previous Version");
+		ViewTreeMerger.append(viewTree, newTree, "Current Version");
 
 		return viewTree;
 	}
