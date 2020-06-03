@@ -956,7 +956,6 @@ public class DotDiffEngine implements DiffEngine {
 		this.context = new DotDiffContext(left.getPromise().getContent(), right.getPromise().getContent());
 		diffView.setPromise(new DotDiffContentPromise(this));
 		diffView.setFormat("graphviz-dot");
-		diffView.setIcon("diagram-ff0000");
 	}
 
 	public static String getSvgEvents() throws IOException {

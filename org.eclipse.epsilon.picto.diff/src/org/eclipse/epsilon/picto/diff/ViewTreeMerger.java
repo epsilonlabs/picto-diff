@@ -60,7 +60,8 @@ public class ViewTreeMerger {
 			if (counterpart == null) {
 				// deleted elements
 				diffView = copy(oldChild);
-				diffView.setName(String.format("%s (Deleted)", oldChild.getName()));
+				//				diffView.setName(String.format("%s (Deleted)", oldChild.getName()));
+				diffView.setIcon("pdiff-deleted");
 			}
 			append(mergedViewTree, diffView, "");
 		}
@@ -68,7 +69,8 @@ public class ViewTreeMerger {
 		for (ViewTree remainingChild : remainingNewChildren) {
 			// new elements
 			ViewTree newChild = copy(remainingChild);
-			newChild.setName(String.format("%s (New)", remainingChild.getName()));
+			//			newChild.setName(String.format("%s (New)", remainingChild.getName()));
+			newChild.setIcon("pdiff-added");
 			newChild.getChildren().addAll(remainingChild.getChildren());
 			append(mergedViewTree, newChild, "");
 		}
@@ -128,7 +130,7 @@ public class ViewTreeMerger {
 			DiffEngineFactory engineFactory) throws Exception {
 		if (oldView.getPromise() == null && newView.getPromise() == null) {
 			if (!oldView.getName().equals("") && !newView.getName().equals("")) {
-				diffView.setPromise(new StaticContentPromise("Both viewtrees empty"));
+				diffView.setPromise(new StaticContentPromise(""));
 				diffView.setFormat("text");
 			}
 		}
@@ -137,10 +139,12 @@ public class ViewTreeMerger {
 			diffView.setFormat("text");
 		}
 		else if (contentEquals(oldView, newView)) {
-			diffView.setName(String.format("%s (Same)", diffView.getName()));
+			//			diffView.setName(String.format("%s (Same)", diffView.getName()));
+			diffView.setIcon("pdiff-unchanged");
 		}
 		else {
-			diffView.setName(String.format("%s (Modified)", diffView.getName()));
+			//			diffView.setName(String.format("%s (Modified)", diffView.getName()));
+			diffView.setIcon("pdiff-changed");
 			if (engineFactory != null) {
 				DiffEngine engine = engineFactory.createDiffEngine();
 				if (engine.supports(oldView.getFormat())) {

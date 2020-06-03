@@ -2,6 +2,7 @@ package org.eclipse.epsilon.picto.diff.source;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.net.URI;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -112,6 +113,8 @@ public class PictoDiffSource extends StandalonePictoSource {
 		ViewTree mergedDiffViewTree = ViewTreeMerger.diffMerge(leftViewTree, rightViewTree, diffEngine);
 
 		ViewTree viewTree = new ViewTree();
+		// set here base uri to find pictodiff icons
+		viewTree.getBaseUris().add(new URI("platform:/plugin/org.eclipse.epsilon.picto.diff/icons/"));
 		ViewTreeMerger.append(viewTree, mergedDiffViewTree, "Differences");
 		ViewTreeMerger.append(viewTree, leftViewTree, "Original Left");
 		ViewTreeMerger.append(viewTree, rightViewTree, "Original Right");
