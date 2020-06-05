@@ -45,11 +45,7 @@ public class DotDiffEngine implements DiffEngine {
 	public enum DISPLAY_MODE {ALL, CHANGED};
 	private enum ADD_MODE {ADDED, CHANGED, REMOVED, NORMAL};
 	protected DotDiffContext context = null;
-	// if true, cluster graphs are linked instead of directly linking nodes
-	// if linking clusters, ports would not work properly
-	// TODO: determine if this is useful for some situation, and delete if not
-	protected boolean linkClusters = false;
-	
+
 	protected MutableGraph source_temp;
 	protected MutableGraph target_temp;
 	protected MutableGraph result;
@@ -386,8 +382,9 @@ public class DotDiffEngine implements DiffEngine {
 			MutableNode linkTarget_targetTemp =
 					addIfNotFoundInTargetTemp(linkTarget, ADD_MODE.NORMAL);
 
-			Link link = linkCrossCluster(
-					target_temp, linkSource_targetTemp, linkTarget_targetTemp);
+			Link link = link(target_temp,
+					linkSource_targetTemp, linkTarget_targetTemp,
+					right_link.from(), right_link.to());
 			copyLinkAttributes(link, right_link);
 			DotDiffUtil.paintAdded(link);
 
@@ -805,43 +802,7 @@ public class DotDiffEngine implements DiffEngine {
 	public String getDotString() {
 		return Graphviz.fromGraph(result).render(Format.DOT).toString();
 	}
-	
-	private Link linkCrossCluster(MutableGraph graph, MutableNode fromNode, MutableNode toNode) {
-		if(linkClusters) {
-			//the mechanism is funny, may need to report an issue.
-			MutableGraph source = null;
-			MutableGraph target = null;
-			for(MutableGraph g: graph.graphs()) {
-				if (source != null & target != null) {	
-					break;
-				}
-				for (MutableNode node : g.nodes()) {
-					if (equalsByName(node, fromNode)) {
-						source = g;
-					}
-					if (equalsByName(node, toNode)) {
-						target = g;
-					}
-				}
-			}
-			source.addLink(target);
-			Link link = source.links().get(source.links().size() - 1);
-			return link;
-		}
-		else {
-			//the mechanism is funny, may need to report an issue.
-			// fonso: I think the funny part here refers to the clusters of each
-			//   node being automatically merged when using addLink directly
-			//   over fromNode, hence the need of creating an intermediate node.
-			//   I might need to ask Will about this.
-			MutableNode node = mutNode(fromNode.name().value());
-			node.addLink(toNode.name().value());
-			Link link = node.links().get(0);
-			graph.rootNodes().add(node);
-			return link;
-		}
-	}
-	
+
 	/**
 	 * This linking method takes extra precautions to correctly link nodes
 	 * through ports (if present)
