@@ -241,8 +241,7 @@ public class DotDiffEngine implements DiffEngine {
 
 	private void processRemovedNodes() {
 		for (MutableNode node : removedNodes) {
-			addIfNotFoundInSourceTemp(node);
-			addIfNotFoundInTargetTemp(node, ADD_MODE.REMOVED);
+			addIfNotFoundInSourceTemp(node, ADD_MODE.REMOVED);
 			getSourceNodes().remove(node); // (fonso) : is this dangerous?
 		}
 	}
@@ -362,37 +361,8 @@ public class DotDiffEngine implements DiffEngine {
 					leftLinkSource_sourceTemp, leftLinkTarget_sourceTemp,
 					removed_link.from(), removed_link.to());
 			copyLinkAttributes(left_link, removed_link);
-
-			/*
-			 * deal with the right graph (a bit harder depending on other changes)
-			 */
-			MutableNode rightNode_targetTemp = addIfNotFoundInTargetTemp(right_node, ADD_MODE.NORMAL);
-
-			MutableNode rightLinkTarget = findLinkTarget(context.getTargetGraph(), removed_link);
-			// the target of the removed link could have also been removed
-			if (rightLinkTarget != null) {
-				MutableNode rightLinkTarget_targetTemp =
-						addIfNotFoundInTargetTemp(rightLinkTarget, ADD_MODE.NORMAL);
-
-				// the source of this link is rightNode (in targetTemp graph)
-				Link right_link = link(target_temp,
-						rightNode_targetTemp, rightLinkTarget_targetTemp,
-						removed_link.from(), removed_link.to());
-				copyLinkAttributes(right_link, removed_link);
-				DotDiffUtil.paintDeleted(right_link);
-			}
-			else {
-				rightLinkTarget = findLinkTarget(context.getSourceGraph(), removed_link);
-				MutableNode rightLinkTarget_targetTemp =
-						addIfNotFoundInTargetTemp(rightLinkTarget, ADD_MODE.NORMAL);
-
-				// the source of this link is rightNode (in targetTemp graph)
-				Link right_link = link(target_temp,
-						rightNode_targetTemp, rightLinkTarget_targetTemp,
-						removed_link.from(), removed_link.to());
-				copyLinkAttributes(right_link, removed_link);
-				DotDiffUtil.paintDeleted(right_link);
-			}
+			// mark link deletions in the previous graph to balance information density
+			DotDiffUtil.paintDeleted(left_link);
 		}
 
 		/*
@@ -472,37 +442,42 @@ public class DotDiffEngine implements DiffEngine {
 		return copy;
 	}
 	
-	public MutableNode addNodeToSourceTemp(MutableNode node) {
-		MutableNode copy = getNodeCopy(node);
+	public MutableGraph clusterWrap(MutableNode node, ADD_MODE mode) {
 		MutableGraph g = mutGraph();
+		switch (mode) {
+		case ADDED:
+			DotDiffUtil.paintAdded(g);
+			break;
+		case CHANGED:
+			DotDiffUtil.paintChanged(g);
+			break;
+		case REMOVED:
+			DotDiffUtil.paintDeleted(g);
+			break;
+		case NORMAL: // unchanged
+		}
 		g.graphAttrs().add("label", "");
 		g.setCluster(true);
-		g.rootNodes().add(copy);
-		g.setName(copy.name().toString());
+		g.rootNodes().add(node);
+		g.setName(node.name().toString());
+		return g;
+	}
+
+	public MutableNode addNodeToSourceTemp(MutableNode node) {
+		return addNodeToSourceTemp(node, ADD_MODE.NORMAL);
+	}
+
+	public MutableNode addNodeToSourceTemp(MutableNode node, ADD_MODE mode) {
+		MutableNode copy = getNodeCopy(node);
+		MutableGraph g = clusterWrap(copy, mode);
 		source_temp.graphs().add(g);
 		return copy;
 	}
 	
 	public MutableNode addNodeToTargetTemp(MutableNode node, ADD_MODE mode) {
 		MutableNode copy = getNodeCopy(node);
-		DotDiffIdUtil.prefixNode(copy);
-		MutableGraph g = mutGraph();
-		if (mode == ADD_MODE.ADDED) {
-			DotDiffUtil.paintAdded(g);
-		}
-		else if (mode == ADD_MODE.CHANGED) {
-			DotDiffUtil.paintChanged(g);
-		}
-		else if (mode == ADD_MODE.REMOVED) {
-			DotDiffUtil.paintDeleted(g);
-		}
-		else {
-			
-		}
-		g.graphAttrs().add("label", "");
-		g.setCluster(true);
-		g.rootNodes().add(copy);
-		g.setName(copy.name().toString());
+		DotDiffIdUtil.prefixNode(copy); // to avoid name collisions of both graphs
+		MutableGraph g = clusterWrap(copy, mode);
 		target_temp.graphs().add(g);
 		return copy;
 	}
@@ -511,9 +486,13 @@ public class DotDiffEngine implements DiffEngine {
 	 * Add if not found in the sourceTemp graph
 	 */
 	public MutableNode addIfNotFoundInSourceTemp(MutableNode node) {
+		return addIfNotFoundInSourceTemp(node, ADD_MODE.NORMAL);
+	}
+
+	public MutableNode addIfNotFoundInSourceTemp(MutableNode node, ADD_MODE mode) {
 		MutableNode node_sourceTemp = findNodeInSourceTemp(node);
 		if (node_sourceTemp == null) {
-			node_sourceTemp = addNodeToSourceTemp(node);
+			node_sourceTemp = addNodeToSourceTemp(node, mode);
 		}
 		return node_sourceTemp;
 	}
