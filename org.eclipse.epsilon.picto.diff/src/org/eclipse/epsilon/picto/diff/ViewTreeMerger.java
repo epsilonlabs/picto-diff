@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.epsilon.picto.StaticContentPromise;
+import org.eclipse.epsilon.picto.ViewContent;
 import org.eclipse.epsilon.picto.ViewTree;
 import org.eclipse.epsilon.picto.diff.engines.DiffEngine;
 import org.eclipse.epsilon.picto.diff.engines.DiffEngineFactory;
@@ -128,52 +129,90 @@ public class ViewTreeMerger {
 
 	private static void diff(ViewTree diffView, ViewTree oldView, ViewTree newView,
 			DiffEngineFactory engineFactory) throws Exception {
-		if (oldView.getPromise() == null && newView.getPromise() == null) {
+
+		if (isContentEmpty(oldView) && isContentEmpty(newView)) {
 			if (!oldView.getName().equals("") && !newView.getName().equals("")) {
 				diffView.setPromise(new StaticContentPromise(""));
 				diffView.setFormat("text");
 			}
 		}
-		else if (oldView.getPromise() == null || newView.getPromise() == null) {
-			diffView.setPromise(new StaticContentPromise("Some viewtree empty"));
-			diffView.setFormat("text");
-		}
-		else if (contentEquals(oldView, newView)) {
-			//			diffView.setName(String.format("%s (Same)", diffView.getName()));
-			diffView.setIcon("pdiff-unchanged");
-		}
-		else {
-			//			diffView.setName(String.format("%s (Modified)", diffView.getName()));
-			diffView.setIcon("pdiff-changed");
-			if (engineFactory != null) {
-				DiffEngine engine = engineFactory.createDiffEngine();
-				if (engine.supports(oldView.getFormat())) {
-					engine.diff(diffView, oldView, newView);
-				}
-				else {
-					diffView.setPromise(new StaticContentPromise(engine.getClass().getName() +
-							" does not support the format of the compared files"));
-					diffView.setFormat("text");
-				}
+		else if (isContentEmpty(oldView) || isContentEmpty(newView)) {
+			if (isContentEmpty(oldView)) {
+				diffView.setPromise(new StaticContentPromise("Empty view on previous version"));
 			}
 			else {
-				for (DiffEngineFactory factory : DIFF_ENGINE_FACTORIES) {
-					DiffEngine engine = factory.createDiffEngine();
-					if (engine.supports(oldView.getFormat())) {
-						engine.diff(diffView, oldView, newView);
-						break;
+				diffView.setPromise(new StaticContentPromise("Empty view on current version"));
+			}
+			diffView.setFormat("text");
+		}
+		else {
+			ViewTree oldViewCopy = prepareForDiff(oldView);
+			ViewTree newViewCopy = prepareForDiff(newView);
+
+			if (contentEquals(oldViewCopy, newViewCopy)) {
+				//			diffView.setName(String.format("%s (Same)", diffView.getName()));
+				diffView.setIcon("pdiff-unchanged");
+			}
+			else {
+				//			diffView.setName(String.format("%s (Modified)", diffView.getName()));
+				diffView.setIcon("pdiff-changed");
+				if (engineFactory != null) {
+					DiffEngine engine = engineFactory.createDiffEngine();
+					if (engine.supports(oldViewCopy.getFormat())) {
+						engine.diff(diffView, oldViewCopy, newViewCopy);
+					}
+					else {
+						diffView.setPromise(new StaticContentPromise(engine.getClass().getName() +
+								" does not support the format of the compared files"));
+						diffView.setFormat("text");
+					}
+				}
+				else {
+					for (DiffEngineFactory factory : DIFF_ENGINE_FACTORIES) {
+						DiffEngine engine = factory.createDiffEngine();
+						if (engine.supports(oldViewCopy.getFormat())) {
+							engine.diff(diffView, oldViewCopy, newViewCopy);
+							break;
+						}
 					}
 				}
 			}
 		}
 	}
 
+	private static boolean isContentEmpty(ViewTree viewTree) {
+		return viewTree.getContent().getText().equals("");
+	}
+
+	/**
+	 * Remove any content text that might cause false positives when looking for
+	 * changes between two viewTree versions
+	 * 
+	 * Also, remove links with editors and viewTree paths that would not work if
+	 * still present in the merged tree
+	 */
+	private static ViewTree prepareForDiff(ViewTree viewTree) {
+		ViewTree copy = copy(viewTree);
+		ViewContent viewContent = copy.getContent();
+
+		String text = viewContent.getText();
+
+		String showViewPattern = "javascript:top.showView\\([^\"]*";
+		text = text.replaceAll(showViewPattern, "");
+
+		String showElementPattern = "javascript:top\\.showElement\\([^\"]*";
+		text = text.replaceAll(showElementPattern, "");
+
+		ViewContent viewContentCopy = new ViewContent(
+				viewContent.getFormat(), text, viewContent.getFile(),
+				viewContent.getLayers(), viewContent.getPatches());
+		copy.setContent(viewContentCopy);
+
+		return copy;
+	}
+
 	private static boolean contentEquals(ViewTree left, ViewTree right) throws Exception {
-		// omit any temporary files in the comparison
-		String tmpFilePattern = "picto\\d+";
-		String leftContent = left.getPromise().getContent().replaceAll(tmpFilePattern, "");
-		String rightContent = right.getPromise().getContent().replaceAll(tmpFilePattern, "");
-		return leftContent.equals(rightContent);
+		return left.getContent().getText().equals(right.getContent().getText());
 	}
 
 	private static DiffEngineFactory getDiffEngineFactory(String diffEngineName) {
