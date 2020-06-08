@@ -893,7 +893,7 @@ public class DotDiffEngine implements DiffEngine {
 
 	@Override
 	public void diff(ViewTree diffView, ViewTree left, ViewTree right) throws Exception {
-		this.context = new DotDiffContext(left.getPromise().getContent(), right.getPromise().getContent());
+		this.context = new DotDiffContext(left.getContent().getText(), right.getContent().getText());
 		diffView.setPromise(new DotDiffContentPromise(this));
 		diffView.setFormat("graphviz-dot");
 	}

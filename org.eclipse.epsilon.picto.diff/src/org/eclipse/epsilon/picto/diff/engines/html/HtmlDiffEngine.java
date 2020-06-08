@@ -325,8 +325,8 @@ public class HtmlDiffEngine implements DiffEngine {
 	@Override
 	public void diff(ViewTree diffView, ViewTree left, ViewTree right) throws Exception {
 
-		Document leftDoc = Jsoup.parse(left.getPromise().getContent());
-		Document rightDoc = Jsoup.parse(right.getPromise().getContent());
+		Document leftDoc = Jsoup.parse(left.getContent().getText());
+		Document rightDoc = Jsoup.parse(right.getContent().getText());
 
 		// TODO: convert to lazy promise
 		Document diffDoc = compare(leftDoc, rightDoc);
