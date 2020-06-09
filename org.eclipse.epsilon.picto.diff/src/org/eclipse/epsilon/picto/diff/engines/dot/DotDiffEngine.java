@@ -176,13 +176,74 @@ public class DotDiffEngine implements DiffEngine {
 		for (MutableNode n : getUnmutableSourceNodes()) {
 			compareNodeLinks(n);
 		}
-		if (getUnmutableSourceNodes().size() != 0) {
-			addFeedback("unmutable source nodes > 0, something is wrong");
-		}
 		// add new links of newly added nodes (e.g. links where the source is
 		//   an added node). Done after the general comparison to be sure that
 		//   any other change over the already existing nodes is treated first
 		processAddedNodesLinks();
+
+		// include unchanged links between nodes of the previous version graph,
+		//     to improve the autolayout of the diagram (with these new links we
+		//     wish to obtain diagrams that resemble better the original ones
+		// this method only adds links between the existing nodes that have been
+		//     added due to the detected changes
+		includeExtraLinksInSourceTemp();
+
+		// same thing, for the current version graph
+		includeExtraLinksInTargetTemp();
+	}
+
+	private void includeExtraLinksInTargetTemp() {
+		for (MutableNode node_targetTemp : getAllNodes(target_temp)) {
+			String originalNodeName = DotDiffIdUtil.getUnprefixedName(node_targetTemp);
+			MutableNode node_target =
+					findNode(originalNodeName, getUnmutableTargetNodes());
+			for (Link link : node_target.links()) {
+				MutableNode linkTarget = findLinkTarget(context.targetGraph, link);
+				MutableNode linkTarget_targetTemp = findNodeInTargetTemp(linkTarget);
+				if (linkTarget_targetTemp != null &&
+						findLink(target_temp,
+								node_targetTemp,
+								(String) link.attrs().get("name")) == null) {
+					Link newLink = link(target_temp,
+							node_targetTemp,
+							linkTarget_targetTemp,
+							link.from(), link.to());
+					copyLinkAttributes(newLink, link);
+				}
+			}
+		}
+	}
+
+	private void includeExtraLinksInSourceTemp() {
+		for (MutableNode node_sourceTemp : getAllNodes(source_temp)) {
+			MutableNode node_source =
+					findNode(node_sourceTemp, getUnmutableSourceNodes());
+			for (Link link : node_source.links()) {
+				MutableNode linkTarget = findLinkTarget(context.sourceGraph, link);
+				MutableNode linkTarget_sourceTemp = findNodeInSourceTemp(linkTarget);
+				if (linkTarget_sourceTemp != null &&
+						findLink(source_temp, node_sourceTemp,
+								(String) link.attrs().get("name")) == null) {
+					Link newLink = link(source_temp,
+							node_sourceTemp, linkTarget_sourceTemp,
+							link.from(), link.to());
+					copyLinkAttributes(newLink, link);
+					// mark link as deleted if the node is also marked as such
+					if (removedNodes.contains(node_source)) {
+						DotDiffUtil.paintDeleted(newLink);
+					}
+				}
+			}
+		}
+	}
+
+	private Collection<MutableNode> getAllNodes(MutableGraph graph) {
+		Set<MutableNode> nodes = new HashSet<>();
+		nodes.addAll(graph.nodes());
+		for (MutableGraph subgraph : graph.graphs()) {
+			nodes.addAll(getAllNodes(subgraph));
+		}
+		return nodes;
 	}
 
 	private void processAddedNodes() {
@@ -238,7 +299,6 @@ public class DotDiffEngine implements DiffEngine {
 	private void processRemovedNodes() {
 		for (MutableNode node : removedNodes) {
 			addIfNotFoundInSourceTemp(node, ADD_MODE.REMOVED);
-			getSourceNodes().remove(node); // (fonso) : is this dangerous?
 		}
 	}
 
@@ -276,7 +336,7 @@ public class DotDiffEngine implements DiffEngine {
 		}
 		else {
 			// node is deleted
-			addRemovedNode(left_node); // (fonso) right now, not necessary
+			addRemovedNode(left_node);
 		}
 
 	}
@@ -396,12 +456,6 @@ public class DotDiffEngine implements DiffEngine {
 				addIfNotFoundInSourceTemp(linkTarget);
 			}
 		}
-
-		//remove left node and right node from their graphs (to reduce memory footprint)
-		// (fonso) this only removes them if they are root nodes.
-		//         is this removal dangerous for some strange cases?
-		getSourceNodes().remove(left_node);
-		getTargetNodes().remove(right_node);
 	}
 	
 	// TODO: should we be careful here about not copying the same edge name
@@ -513,15 +567,6 @@ public class DotDiffEngine implements DiffEngine {
 		return (HashSet<MutableNode>) context.getTargetGraph().nodes();
 	}
 
-	
-	private HashSet<MutableNode> getSourceNodes() {
-		return (HashSet<MutableNode>) context.getSourceGraph().rootNodes();
-	}
-	
-	private HashSet<MutableNode> getTargetNodes() {
-		return (HashSet<MutableNode>) context.getTargetGraph().rootNodes();
-	}
-	
 	private MutableNode findNodeByName(String nodeName, MutableGraph graph) {
 		for (MutableGraph g : graph.graphs()) {
 			for (MutableNode otherNode : g.rootNodes()) {
@@ -582,9 +627,35 @@ public class DotDiffEngine implements DiffEngine {
 	}
 
 	private MutableNode findNode(MutableNode node, Collection<MutableNode> nodeCollection) {
+		return findNode(node.name().value(), nodeCollection);
+	}
+
+	private MutableNode findNode(String name, Collection<MutableNode> nodeCollection) {
 		for (MutableNode n : nodeCollection) {
-			if (equalsByName(node, n)) {
+			if (name.equals(n.name().value())) {
 				return n;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * This method does an exhaustive search, including the special nodes that are
+	 * added to the temp graphs when cross-cluster links are created. This
+	 * special nodes are needed to prevent that the linked clusters are
+	 * automatically merged when generating the dot (don't know why that happens)
+	 */
+	public Link findLink(MutableGraph graph, MutableNode node, String name) {
+		Link link = findLink(node, name);
+		if (link != null) {
+			return link;
+		}
+		for (MutableNode otherNode : getAllNodes(graph)) {
+			if (equalsByName(node, otherNode)) {
+				link = findLink(otherNode, name);
+				if (link != null) {
+					return link;
+				}
 			}
 		}
 		return null;

@@ -57,6 +57,14 @@ public class DotDiffIdUtil {
 		return prefix(node.name().value());
 	}
 
+	public static String getUnprefixedName(MutableNode node) {
+		if (!node.name().value().startsWith(PREFIX)) {
+			throw new RuntimeException(
+					String.format("Node with name %s is not prefixed", node.name().value()));
+		}
+		return node.name().value().replaceFirst(PREFIX, "");
+	}
+
 	public static void main(String[] args) throws IOException {
 		InputStream dot1 = new FileInputStream("files/foo.dot");
 	    MutableGraph g = new Parser().read(dot1);
