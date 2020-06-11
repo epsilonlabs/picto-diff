@@ -8,7 +8,7 @@ Summary of changes:
 	- Change R3 likelihood/severities (but withough changing it from high risk)
 	- Reopen R4
 -->
-<system>
+<system name="Risk Examples">
 	<r Id="R1" t="A low-significance risk" lik="h" sev="m"/>
 	<r Id="R12" t="Another low-significance risk" lik="l" sev="m"/>
 	<r Id="R3" t="A critical risk" lik="h" sev="h"/>

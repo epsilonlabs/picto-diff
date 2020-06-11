@@ -1,6 +1,6 @@
 <?nsuri risks?>
 <?render-egx platform:/resource/org.eclipse.epsilon.examples.flexmi.risks/risks2html/risks2html.egx?>
-<system>
+<system name="Risk Examples">
 	<r Id="R1" t="A low-significance risk" lik="l" sev="m"/>
 	<r Id="R12" t="Another low-significance risk" lik="l" sev="m"/>
 	<r Id="R2" t="An important risk" lik="m" sev="m"/>

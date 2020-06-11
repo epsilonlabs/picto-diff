@@ -1,0 +1,7 @@
+<?nsuri picto?>
+<picto template="platform:/resource/org.eclipse.epsilon.examples.picto.table/picto/object2table.egx" standalone="true">
+	<model name="M" type="EMF">
+		<parameter name="modelFile" file="risks-everything.flexmi"/>
+		<parameter name="metamodelUri" value="risks"/>
+	</model>
+</picto>

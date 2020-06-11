@@ -1,7 +1,7 @@
 <?nsuri picto?>
 <picto template="platform:/resource/org.eclipse.epsilon.examples.flexmi.risks/risks2html/risks2html.egx" standalone="true">
-	<model type="EMF">
-		<parameter name="modelFile" file="risks-addRisks.flexmi"/>
+	<model name="M" type="EMF">
+		<parameter name="modelFile" file="risks-baseline.flexmi"/>
 		<parameter name="metamodelUri" value="risks"/>
 	</model>
 </picto>
