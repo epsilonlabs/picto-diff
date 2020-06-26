@@ -41,6 +41,8 @@ public class DotDiffEngine implements DiffEngine {
 	public static final String SVG_EVENTS_FILE = "transformations/svgEvents.html";
 	public static String svgEvents;
 
+	private static final double GRAPH_SCALE = 1.3;
+
 	private ArrayList<String> feedbacks = new ArrayList<String>();
 	public enum DISPLAY_MODE {ALL, CHANGED};
 	private enum ADD_MODE {ADDED, CHANGED, REMOVED, NORMAL};
@@ -48,7 +50,6 @@ public class DotDiffEngine implements DiffEngine {
 
 	protected MutableGraph source_temp;
 	protected MutableGraph target_temp;
-	protected MutableGraph result;
 
 	protected PictoDiffValidator graphValidator = new PictoDiffValidator();
 	
@@ -71,7 +72,7 @@ public class DotDiffEngine implements DiffEngine {
 
 		String filesLocationFormat = "files/dotDiffEngine/%s";
 		String outputFolder = "diffResult/dotDiffEngine";
-		String outputLocationFormat = outputFolder + "/%s-diffResult.dot";
+		String outputLocationFormat = outputFolder + "/%s-diffResult.html";
 
 		File directory = new File(outputFolder);
 		if (!directory.exists()) {
@@ -136,25 +137,13 @@ public class DotDiffEngine implements DiffEngine {
 	public boolean load() {
 		try {
 			if (context.loadGraphs()) {
-				result = mutGraph();
-				result.setName("pdiff");
-				result.graphAttrs().add(context.getSourceGraph().graphAttrs());
-				
 				source_temp = mutGraph();
 				source_temp.setDirected(true);
-				source_temp.setName("left");
 				source_temp.graphAttrs().add(context.getSourceGraph().graphAttrs());
-				source_temp.graphAttrs().add("label", "Previous Version");
-				source_temp.setCluster(true);
-				source_temp.addTo(result);
 				
 				target_temp = mutGraph();
 				target_temp.setDirected(true);
-				target_temp.setName("right");
 				target_temp.graphAttrs().add(context.getTargetGraph().graphAttrs());
-				target_temp.graphAttrs().add("label", "Current Version");
-				target_temp.setCluster(true);
-				target_temp.addTo(result);
 			}
 		} catch (IOException e) {
 			addFeedback(e.getMessage());
@@ -163,7 +152,7 @@ public class DotDiffEngine implements DiffEngine {
 		}
 		return true;
 	}
-	
+
 	public void compare() {
 		processAddedNodes();
 		// compare attributes first to avoid introducing items
@@ -866,12 +855,20 @@ public class DotDiffEngine implements DiffEngine {
 		return attrs;
 	}
 	
-	public String getSVGString() {
-		 return Graphviz.fromGraph(result).render(Format.SVG).toString();
+	public String getOldVersion(Format format) {
+		return Graphviz.fromGraph(source_temp).scale(GRAPH_SCALE).render(format).toString();
 	}
 	
-	public String getDotString() {
-		return Graphviz.fromGraph(result).render(Format.DOT).toString();
+	public String getNewVersion(Format format) {
+		return Graphviz.fromGraph(target_temp).scale(GRAPH_SCALE).render(format).toString();
+	}
+
+	public boolean oldVersionEmpty() {
+		return getAllNodes(source_temp).isEmpty();
+	}
+
+	public boolean newVersionEmpty() {
+		return getAllNodes(target_temp).isEmpty();
 	}
 
 	/**
@@ -965,8 +962,9 @@ public class DotDiffEngine implements DiffEngine {
 	@Override
 	public void diff(ViewTree diffView, ViewTree left, ViewTree right) throws Exception {
 		this.context = new DotDiffContext(left.getContent().getText(), right.getContent().getText());
-		diffView.setPromise(new DotDiffContentPromise(this));
-		diffView.setFormat("graphviz-dot");
+		DotDiffContentPromise promise = new DotDiffContentPromise(this);
+		diffView.setPromise(promise);
+		diffView.setFormat(promise.getFormat());
 	}
 
 	public static String getSvgEvents() throws IOException {
