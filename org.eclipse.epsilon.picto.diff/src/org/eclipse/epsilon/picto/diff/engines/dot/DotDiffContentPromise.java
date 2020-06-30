@@ -42,10 +42,10 @@ public class DotDiffContentPromise implements ContentPromise {
 			engine.load();
 			engine.compare();
 
-			newVersionGraph = getFormattedGraph("New Version",
+			newVersionGraph = getFormattedGraph("Current Version",
 					engine.getNewVersion(Format.SVG), engine.newVersionEmpty());
 
-			oldVersionGraph = getFormattedGraph("Old Version",
+			oldVersionGraph = getFormattedGraph("Previous Version",
 					engine.getOldVersion(Format.SVG), engine.oldVersionEmpty());
 
 			content = MessageFormat.format(HTML_PAGE_FORMAT,
