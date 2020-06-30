@@ -13,7 +13,7 @@ public class SideBySideViewContent extends ViewContent {
 	private String rightText;
 
 	public SideBySideViewContent(String headerText, String leftText, String rightText) {
-		super("html", "", null, Collections.emptyList(), Collections.emptyList());
+		super("html", "", null, Collections.emptyList(), Collections.emptyList(), Collections.emptySet());
 		this.headerText = headerText;
 		this.leftText = leftText;
 		this.rightText = rightText;
@@ -49,6 +49,6 @@ public class SideBySideViewContent extends ViewContent {
 
 	@Override
 	public ViewContent getSourceContent(PictoView pictoView) {
-		return new ViewContent("html", getSourceText(pictoView.getViewRenderer()), file, layers, patches);
+		return new ViewContent("html", getSourceText(pictoView.getViewRenderer()), file, layers, patches, baseUris);
 	}
 }

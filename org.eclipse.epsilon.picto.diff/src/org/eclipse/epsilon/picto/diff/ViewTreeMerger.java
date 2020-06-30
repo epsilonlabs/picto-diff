@@ -205,7 +205,8 @@ public class ViewTreeMerger {
 
 		ViewContent viewContentCopy = new ViewContent(
 				viewContent.getFormat(), text, viewContent.getFile(),
-				viewContent.getLayers(), viewContent.getPatches());
+				viewContent.getLayers(), viewContent.getPatches(),
+				viewContent.getBaseUris());
 		copy.setContent(viewContentCopy);
 
 		return copy;
