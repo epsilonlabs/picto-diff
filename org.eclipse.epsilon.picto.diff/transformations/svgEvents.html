@@ -1,16 +1,17 @@
 <!-- html fragment appended to the end of the DotDiffEngine comparison result -->
 <script type="text/javascript">
 
-    window.addEventListener('load', function () {
-        var SVGDoc = document.getElementsByTagName("svg")[0];
-        SVGDoc.setAttribute("onmouseover", "mouseOver(evt)");
-        SVGDoc.setAttribute("onmouseout", "mouseOut(evt)");
-    });
-
     var selectionColor = "orange";
     // change the stroke of polygons except transparent ones
     var transparentColor = "transparent";
-    var diffPrefix = "_";
+
+    window.addEventListener('load', function () {
+        var SVGDocs = document.getElementsByTagName("svg");
+        for (var i = 0; i < SVGDocs.length; i += 1) {
+            SVGDocs[i].setAttribute("onmouseover", "mouseOver(evt)");
+            SVGDocs[i].setAttribute("onmouseout", "mouseOut(evt)");
+        }
+    });
 
     function mouseOver(evt) {
         var element = evt.target;
@@ -34,10 +35,7 @@
                 for (var j = 0; j < nodes[i].childNodes.length; j++) {
                     if (nodes[i].childNodes[j] instanceof SVGTitleElement) {
                         var otherTitle = nodes[i].childNodes[j].childNodes[0].nodeValue;
-                        if (title == (diffPrefix + otherTitle)) {
-                            index = i;
-                        }
-                        else if ((diffPrefix + title) == otherTitle) {
+                        if (title == otherTitle) {
                             index = i;
                         }
                     }
@@ -75,9 +73,7 @@
                 for (var j = 0; j < nodes[i].childNodes.length; j++) {
                     if (nodes[i].childNodes[j] instanceof SVGTitleElement) {
                         var otherTitle = nodes[i].childNodes[j].childNodes[0].nodeValue;
-                        if (title == (diffPrefix + otherTitle)) {
-                            index = i;
-                        } else if ((diffPrefix + title) == otherTitle) {
+                        if (title == otherTitle) {
                             index = i;
                         }
                     }
