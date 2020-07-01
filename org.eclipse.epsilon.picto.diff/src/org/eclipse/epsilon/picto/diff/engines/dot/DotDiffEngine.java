@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -43,8 +42,6 @@ public class DotDiffEngine implements DiffEngine {
 
 	private static final double GRAPH_SCALE = 1.3;
 
-	private ArrayList<String> feedbacks = new ArrayList<String>();
-	public enum DISPLAY_MODE {ALL, CHANGED};
 	private enum ADD_MODE {ADDED, CHANGED, REMOVED, NORMAL};
 	protected DotDiffContext context = null;
 
@@ -54,7 +51,6 @@ public class DotDiffEngine implements DiffEngine {
 	protected PictoDiffValidator graphValidator = new PictoDiffValidator();
 	
 	protected HashSet<MutableNode> changedNodes = new HashSet<MutableNode>();
-	protected HashSet<MutableNode> unchangedNodes = new HashSet<MutableNode>();
 	protected HashSet<MutableNode> addedNodes = new HashSet<MutableNode>();
 	protected HashSet<MutableNode> removedNodes = new HashSet<MutableNode>();
 	
@@ -146,7 +142,6 @@ public class DotDiffEngine implements DiffEngine {
 				target_temp.graphAttrs().add(context.getTargetGraph().graphAttrs());
 			}
 		} catch (IOException e) {
-			addFeedback(e.getMessage());
 			e.printStackTrace();
 			return false;
 		}
@@ -936,22 +931,6 @@ public class DotDiffEngine implements DiffEngine {
 		// at this point auxNode contains a single link (the created one)
 		//   no mather the route followed above
 		return auxNode.links().get(0);
-	}
-
-	public void addFeedback(String feedback) {
-		feedbacks.add(feedback);
-	}
-	
-	public ArrayList<String> getFeedbacks() {
-		return feedbacks;
-	}
-	
-	public String getStringFeedback() {
-		String ret = "";
-		for(String s: feedbacks) {
-			ret = ret + s + "\n";
-		}
-		return ret;
 	}
 
 	@Override
