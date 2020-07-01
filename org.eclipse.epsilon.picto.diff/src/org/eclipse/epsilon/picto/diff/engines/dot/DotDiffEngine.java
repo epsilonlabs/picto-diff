@@ -22,7 +22,6 @@ import org.eclipse.epsilon.picto.StaticContentPromise;
 import org.eclipse.epsilon.picto.ViewTree;
 import org.eclipse.epsilon.picto.diff.PictoDiffPlugin;
 import org.eclipse.epsilon.picto.diff.engines.DiffEngine;
-import org.eclipse.epsilon.picto.diff.engines.dot.util.DotDiffIdUtil;
 import org.eclipse.epsilon.picto.diff.engines.dot.util.DotDiffUtil;
 import org.eclipse.epsilon.picto.diff.engines.dot.util.PictoDiffValidator;
 
@@ -179,9 +178,8 @@ public class DotDiffEngine implements DiffEngine {
 
 	private void includeExtraLinksInTargetTemp() {
 		for (MutableNode node_targetTemp : getAllNodes(target_temp)) {
-			String originalNodeName = DotDiffIdUtil.getUnprefixedName(node_targetTemp);
 			MutableNode node_target =
-					findNode(originalNodeName, getUnmutableTargetNodes());
+					findNode(node_targetTemp.name().value(), getUnmutableTargetNodes());
 			for (Link link : node_target.links()) {
 				MutableNode linkTarget = findLinkTarget(context.targetGraph, link);
 				MutableNode linkTarget_targetTemp = findNodeInTargetTemp(linkTarget);
@@ -515,7 +513,6 @@ public class DotDiffEngine implements DiffEngine {
 	
 	public MutableNode addNodeToTargetTemp(MutableNode node, ADD_MODE mode) {
 		MutableNode copy = getNodeCopy(node);
-		DotDiffIdUtil.prefixNode(copy); // to avoid name collisions of both graphs
 		MutableGraph g = clusterWrap(copy, mode);
 		target_temp.graphs().add(g);
 		return copy;
@@ -571,8 +568,7 @@ public class DotDiffEngine implements DiffEngine {
 	}
 	
 	public MutableNode findNodeInTargetTemp(MutableNode node) {
-		String prefixedName = DotDiffIdUtil.getPrefixedName(node);
-		return findNodeByName(prefixedName, target_temp);
+		return findNodeByName(node.name().value(), target_temp);
 	}
 	
 	public boolean compareLink(MutableNode ln, MutableNode rn, Link s, Link t) {
