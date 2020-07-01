@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -50,19 +51,19 @@ public class DotDiffEngine implements DiffEngine {
 
 	protected PictoDiffValidator graphValidator = new PictoDiffValidator();
 	
-	protected HashSet<MutableNode> changedNodes = new HashSet<MutableNode>();
-	protected HashSet<MutableNode> addedNodes = new HashSet<MutableNode>();
-	protected HashSet<MutableNode> removedNodes = new HashSet<MutableNode>();
+	protected Set<MutableNode> changedNodes = new HashSet<>();
+	protected Set<MutableNode> addedNodes = new HashSet<>();
+	protected Set<MutableNode> removedNodes = new HashSet<>();
 	
-	protected HashMap<MutableNode, HashSet<Link>> unchangedLinks = new HashMap<MutableNode, HashSet<Link>>();
-	protected HashMap<MutableNode, HashSet<Link>> addedLinks = new HashMap<MutableNode, HashSet<Link>>();
-	protected HashMap<MutableNode, HashSet<Link>> removedLinks = new HashMap<MutableNode, HashSet<Link>>();
-	protected HashMap<MutableNode, HashSet<Link>> changedLinks = new HashMap<MutableNode, HashSet<Link>>();
+	protected Map<MutableNode, Set<Link>> unchangedLinks = new HashMap<>();
+	protected Map<MutableNode, Set<Link>> addedLinks = new HashMap<>();
+	protected Map<MutableNode, Set<Link>> removedLinks = new HashMap<>();
+	protected Map<MutableNode, Set<Link>> changedLinks = new HashMap<>();
 	
-	protected HashMap<MutableNode, HashSet<String>> addedAttrs = new HashMap<MutableNode, HashSet<String>>();
-	protected HashMap<MutableNode, HashSet<String>> removedAttrs = new HashMap<MutableNode, HashSet<String>>();
-	protected HashMap<MutableNode, HashSet<String>> changedAttrs = new HashMap<MutableNode, HashSet<String>>();
-	protected HashMap<MutableNode, HashSet<String>> unchangedAttrs = new HashMap<MutableNode, HashSet<String>>();
+	protected Map<MutableNode, Set<String>> addedAttrs = new HashMap<>();
+	protected Map<MutableNode, Set<String>> removedAttrs = new HashMap<>();
+	protected Map<MutableNode, Set<String>> changedAttrs = new HashMap<>();
+	protected Map<MutableNode, Set<String>> unchangedAttrs = new HashMap<>();
 	
 	public static void main(String[] args) throws Exception {
 
@@ -298,6 +299,7 @@ public class DotDiffEngine implements DiffEngine {
 			
 			//if there are changed attributes, change color of the right node
 			if (getChangedAttrs(right_node).size() != 0) {
+				changedNodes.add(right_node);
 				//paint orange for changed attributes
 				for(String s: getChangedAttrs(right_node)) {
 					if (s.equals("label")) {
@@ -320,7 +322,7 @@ public class DotDiffEngine implements DiffEngine {
 		}
 		else {
 			// node is deleted
-			addRemovedNode(left_node);
+			removedNodes.add(left_node);
 		}
 
 	}
@@ -416,6 +418,8 @@ public class DotDiffEngine implements DiffEngine {
 
 		// each link remaining in the right node copy is an added one
 		for (Link right_link : right_node_copy.links()) {
+
+			addAddedLink(right_node_copy, right_link);
 
 			// the source is the right node
 			MutableNode linkSource = right_node;
@@ -703,13 +707,9 @@ public class DotDiffEngine implements DiffEngine {
 		}
 		return null;
 	}
-	
-	private void addRemovedNode(MutableNode node) {
-		removedNodes.add(node);
-	}
 
 	private void addUnchangedLink(MutableNode node, Link link) {
-		HashSet<Link> links = unchangedLinks.get(node);
+		Set<Link> links = unchangedLinks.get(node);
 		if (links == null) {
 			links = new HashSet<Link>();
 			links.add(link);
@@ -720,8 +720,20 @@ public class DotDiffEngine implements DiffEngine {
 		}
 	}
 	
+	private void addAddedLink(MutableNode node, Link link) {
+		Set<Link> links = addedLinks.get(node);
+		if (links == null) {
+			links = new HashSet<Link>();
+			links.add(link);
+			addedLinks.put(node, links);
+		}
+		else {
+			links.add(link);
+		}
+	}
+
 	private void addChangedLink(MutableNode node, Link link) {
-		HashSet<Link> links = changedLinks.get(node);
+		Set<Link> links = changedLinks.get(node);
 		if (links == null) {
 			links = new HashSet<Link>();
 			links.add(link);
@@ -733,7 +745,7 @@ public class DotDiffEngine implements DiffEngine {
 	}
 
 	private void addRemovedLink(MutableNode node, Link link) {
-		HashSet<Link> links = removedLinks.get(node);
+		Set<Link> links = removedLinks.get(node);
 		if (links == null) {
 			links = new HashSet<Link>();
 			links.add(link);
@@ -744,32 +756,32 @@ public class DotDiffEngine implements DiffEngine {
 		}
 	}
 	
-	public HashSet<Link> getUnchangedLinks(MutableNode node) {
-		HashSet<Link> links = unchangedLinks.get(node);
+	public Set<Link> getUnchangedLinks(MutableNode node) {
+		Set<Link> links = unchangedLinks.get(node);
 		if (links == null) {
 			links = new HashSet<Link>();
 		}
 		return links;
 	}
 	
-	public HashSet<Link> getChangedLinks(MutableNode node) {
-		HashSet<Link> links = changedLinks.get(node);
+	public Set<Link> getChangedLinks(MutableNode node) {
+		Set<Link> links = changedLinks.get(node);
 		if (links == null) {
 			links = new HashSet<Link>();
 		}
 		return links;
 	}
 	
-	public HashSet<Link> getAddedLinks(MutableNode node) {
-		HashSet<Link> links = addedLinks.get(node);
+	public Set<Link> getAddedLinks(MutableNode node) {
+		Set<Link> links = addedLinks.get(node);
 		if (links == null) {
 			links = new HashSet<Link>();
 		}
 		return links;
 	}
 	
-	public HashSet<Link> getRemovedLinks(MutableNode node) {
-		HashSet<Link> links = removedLinks.get(node);
+	public Set<Link> getRemovedLinks(MutableNode node) {
+		Set<Link> links = removedLinks.get(node);
 		if (links == null) {
 			links = new HashSet<Link>();
 		}
@@ -777,7 +789,7 @@ public class DotDiffEngine implements DiffEngine {
 	}
 	
 	private void addChangedAttr(MutableNode node, String attr) {
-		HashSet<String> attrs = changedAttrs.get(node);
+		Set<String> attrs = changedAttrs.get(node);
 		if (attrs == null) {
 			attrs = new HashSet<String>();
 			attrs.add(attr);
@@ -789,7 +801,7 @@ public class DotDiffEngine implements DiffEngine {
 	}
 	
 	private void addUnchangedAttr(MutableNode node, String attr) {
-		HashSet<String> attrs = unchangedAttrs.get(node);
+		Set<String> attrs = unchangedAttrs.get(node);
 		if (attrs == null) {
 			attrs = new HashSet<String>();
 			attrs.add(attr);
@@ -801,7 +813,7 @@ public class DotDiffEngine implements DiffEngine {
 	}
 	
 	private void addRemovedAttr(MutableNode node, String attr) {
-		HashSet<String> attrs = removedAttrs.get(node);
+		Set<String> attrs = removedAttrs.get(node);
 		if (attrs == null) {
 			attrs = new HashSet<String>();
 			attrs.add(attr);
@@ -815,7 +827,7 @@ public class DotDiffEngine implements DiffEngine {
 	// (fonso): maintained in case that fine-grain treatment of attrs is improved
 	@SuppressWarnings("unused")
 	private void addAddedAttr(MutableNode node, String attr) {
-		HashSet<String> attrs = addedAttrs.get(node);
+		Set<String> attrs = addedAttrs.get(node);
 		if (attrs == null) {
 			attrs = new HashSet<String>();
 			attrs.add(attr);
@@ -826,24 +838,24 @@ public class DotDiffEngine implements DiffEngine {
 		}
 	}
 	
-	public HashSet<String> getChangedAttrs(MutableNode node) {
-		HashSet<String> attrs = changedAttrs.get(node);
+	public Set<String> getChangedAttrs(MutableNode node) {
+		Set<String> attrs = changedAttrs.get(node);
 		if (attrs == null) {
 			attrs = new HashSet<String>();
 		}
 		return attrs;
 	}
 	
-	public HashSet<String> getAddedAttrs(MutableNode node) {
-		HashSet<String> attrs = addedAttrs.get(node);
+	public Set<String> getAddedAttrs(MutableNode node) {
+		Set<String> attrs = addedAttrs.get(node);
 		if (attrs == null) {
 			attrs = new HashSet<String>();
 		}
 		return attrs;
 	}
 	
-	public HashSet<String> getRemovedAttrs(MutableNode node) {
-		HashSet<String> attrs = removedAttrs.get(node);
+	public Set<String> getRemovedAttrs(MutableNode node) {
+		Set<String> attrs = removedAttrs.get(node);
 		if (attrs == null) {
 			attrs = new HashSet<String>();
 		}
@@ -959,5 +971,25 @@ public class DotDiffEngine implements DiffEngine {
 			}
 		}
 		return svgEvents;
+	}
+
+	public Set<MutableNode> getChangedNodes() {
+		return changedNodes;
+	}
+
+	public Set<MutableNode> getAddedNodes() {
+		return addedNodes;
+	}
+
+	public Set<MutableNode> getRemovedNodes() {
+		return removedNodes;
+	}
+
+	public Map<MutableNode, Set<Link>> getAddedLinks() {
+		return addedLinks;
+	}
+
+	public Map<MutableNode, Set<Link>> getRemovedLinks() {
+		return removedLinks;
 	}
 }

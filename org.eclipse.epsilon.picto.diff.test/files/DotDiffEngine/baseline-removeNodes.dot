@@ -1,0 +1,20 @@
+digraph G {
+	// remove windows and admin
+
+	node[shape=record]
+	edge[dir=back, arrowtail=empty]
+
+	OperatingSystem[label = "{OperatingSystem||}"]
+	
+	GNU_Linux[label = "{GNU_Linux||}"]
+	OS_X[label = "{OS_X||}"]
+	FreeBSD[label = "{FreeBSD||}"]
+	Antivirus[label = "{Antivirus||}"]
+	Spyware[label = "{Spyware||}"]
+	OperatingSystem->GNU_Linux[name="h1"];
+	OperatingSystem->OS_X[name="h2"];
+	OperatingSystem->FreeBSD[name="h3"];
+	Antivirus->Spyware[label=" attacks ", dir=forward, arrowhead = vee, name="attacks"];
+	Distribution[label = "{Distribution||}"]
+	GNU_Linux->Distribution[label=" distribution ", dir=forward, arrowhead = vee, name="eDistr"];
+}

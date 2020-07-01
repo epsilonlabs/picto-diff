@@ -1,0 +1,26 @@
+digraph G {
+	// add FileSystem node
+
+	node[shape=record]
+	edge[dir=back, arrowtail=empty]
+
+	Admin[label="{Admin||}"]
+	OperatingSystem[label = "{OperatingSystem||}"]
+	
+	GNU_Linux[label = "{GNU_Linux||}"]
+	OS_X[label = "{OS_X||}"]
+	FreeBSD[label = "{FreeBSD||}"]
+	Windows[label = "{Windows||}"]
+	Antivirus[label = "{Antivirus||}"]
+	Spyware[label = "{Spyware||}"]
+	OperatingSystem->GNU_Linux[name="h1"];
+	OperatingSystem->OS_X[name="h2"];
+	OperatingSystem->FreeBSD[name="h3"];
+	OperatingSystem->Windows[name="h4"];
+	Windows->Antivirus[label=" antivirus ", dir=forward, arrowhead = vee, name="antivirus"];
+	Antivirus->Spyware[label=" attacks ", dir=forward, arrowhead = vee, name="attacks"];
+	Distribution[label = "{Distribution||}"]
+	GNU_Linux->Distribution[label=" distribution ", dir=forward, arrowhead = vee, name="eDistr"];
+	
+	FileSystem[label = "{FileSystem||}"]
+}
