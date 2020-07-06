@@ -15,6 +15,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
+import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 
 public class HtmlDiffEngine implements DiffEngine {
@@ -325,8 +326,8 @@ public class HtmlDiffEngine implements DiffEngine {
 	@Override
 	public void diff(ViewTree diffView, ViewTree left, ViewTree right) throws Exception {
 
-		Document leftDoc = Jsoup.parse(left.getContent().getText());
-		Document rightDoc = Jsoup.parse(right.getContent().getText());
+		Document leftDoc = Jsoup.parse(left.getContent().getText(), "", Parser.xmlParser());
+		Document rightDoc = Jsoup.parse(right.getContent().getText(), "", Parser.xmlParser());
 
 		// TODO: convert to lazy promise
 		Document diffDoc = compare(leftDoc, rightDoc);
