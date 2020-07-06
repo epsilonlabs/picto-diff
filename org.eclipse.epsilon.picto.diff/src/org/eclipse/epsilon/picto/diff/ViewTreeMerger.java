@@ -25,16 +25,18 @@ public class ViewTreeMerger {
 	public static ViewTree diffMerge(ViewTree oldTree, ViewTree newTree,
 			String manualDiffEngine) throws Exception {
 
-		return diffMerge(new ViewTree(), Arrays.asList(""),
-				oldTree, newTree, getDiffEngineFactory(manualDiffEngine));
+		ViewTree diffView = new ViewTree();
+		diffMerge(diffView, Arrays.asList(""),	oldTree, newTree,
+				getDiffEngineFactory(manualDiffEngine));
+		return diffView;
 	}
 
-	private static ViewTree diffMerge(ViewTree mergedViewTree, List<String> currentPath,
+	private static void diffMerge(ViewTree mergedView, List<String> currentPath,
 			ViewTree oldTree, ViewTree newTree, DiffEngineFactory engineFactory) throws Exception {
 
 		if (currentPath.size() == 1) {
 			// compare roots of the viewtrees
-			diff(mergedViewTree, oldTree, newTree, engineFactory);
+			diff(mergedView, oldTree, newTree, engineFactory);
 		}
 
 		ViewTree currentOld = oldTree.forPath(currentPath);
@@ -43,38 +45,43 @@ public class ViewTreeMerger {
 
 		for (ViewTree oldChild : currentOld.getChildren()) {
 			ViewTree counterpart = null;
-			ViewTree diffView = null;
 			for (ViewTree newChild : remainingNewChildren) {
 				if (oldChild.getName().equals(newChild.getName())) {
 					counterpart = newChild;
 					remainingNewChildren.remove(counterpart);
-					diffView = copy(oldChild);
+					ViewTree diffView = copy(oldChild);
 					diff(diffView, oldChild, counterpart, engineFactory);
 					if (!oldChild.getChildren().isEmpty()) {
 						List<String> newPath = new ArrayList<>(currentPath);
 						newPath.add(oldChild.getName());
-						diffView = diffMerge(diffView, newPath, oldTree, newTree, engineFactory);
+						diffMerge(diffView, newPath, oldTree, newTree, engineFactory);
 					}
+					mergedView.getChildren().add(diffView);
 					break;
 				}
 			}
 			if (counterpart == null) {
 				// deleted elements
-				diffView = copy(oldChild);
-				diffView.setIcon("pdiff-deleted");
+				ViewTree deletedView = copy(oldChild);
+				deletedView.setIcon("pdiff-deleted");
+				copyChildrenWithIcon(deletedView, oldChild.getChildren(), "pdiff-deleted");
+				mergedView.getChildren().add(deletedView);
 			}
-			append(mergedViewTree, diffView, "");
 		}
 
-		for (ViewTree remainingChild : remainingNewChildren) {
-			// new elements
-			ViewTree newChild = copy(remainingChild);
-			newChild.setIcon("pdiff-added");
-			newChild.getChildren().addAll(remainingChild.getChildren());
-			append(mergedViewTree, newChild, "");
-		}
+		// any remaining children is a new element
+		copyChildrenWithIcon(mergedView, remainingNewChildren, "pdiff-added");
+	}
 
-		return mergedViewTree;
+	private static void copyChildrenWithIcon(ViewTree newView,
+			List<ViewTree> copiedChildren, String icon) {
+		
+		for (ViewTree copiedChild : copiedChildren) {
+			ViewTree newChild = copy(copiedChild);
+			newChild.setIcon(icon);
+			newView.getChildren().add(newChild);
+			copyChildrenWithIcon(newChild, copiedChild.getChildren(), icon);
+		}
 	}
 
 	/**
@@ -91,10 +98,7 @@ public class ViewTreeMerger {
 		// or if the provided leaf name is empty
 		if (right.getName().equals("") || leafName.equals("")) {
 			child = copy(right);
-			if (leafName.equals("")) {
-				child.setName(right.getName());
-			}
-			else {
+			if (!leafName.equals("")) {
 				child.setName(leafName);
 			}
 			child.getChildren().addAll(right.getChildren());
