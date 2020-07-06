@@ -23,6 +23,9 @@ import org.eclipse.ui.IFileEditorInput;
 
 public class PictoDiffSource extends StandalonePictoSource {
 
+	public static final String OLD_VERSION_PARAMETER = "previous";
+	public static final String NEW_VERSION_PARAMETER = "current";
+
 	@Override
 	public String getFormat() {
 		return "html";
@@ -55,14 +58,14 @@ public class PictoDiffSource extends StandalonePictoSource {
 		// TODO: change "left" and "right" parameter names to more meaningful ones
 		try {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(diffFile.getContents(true)));
-			Parameter pLeft = PictoFactory.eINSTANCE.createParameter();
-			pLeft.setName("left");
-			pLeft.setFile(reader.readLine());
-			metadata.getParameters().add(pLeft);
-			Parameter pRight = PictoFactory.eINSTANCE.createParameter();
-			pRight.setName("right");
-			pRight.setFile(reader.readLine());
-			metadata.getParameters().add(pRight);
+			Parameter pOld = PictoFactory.eINSTANCE.createParameter();
+			pOld.setName(OLD_VERSION_PARAMETER);
+			pOld.setFile(reader.readLine());
+			metadata.getParameters().add(pOld);
+			Parameter pNew = PictoFactory.eINSTANCE.createParameter();
+			pNew.setName(NEW_VERSION_PARAMETER);
+			pNew.setFile(reader.readLine());
+			metadata.getParameters().add(pNew);
 		}
 		catch (Exception e) {
 			return null;
@@ -84,8 +87,8 @@ public class PictoDiffSource extends StandalonePictoSource {
 	public ViewTree getViewTree(IEditorPart editor) throws Exception {
 
 		Picto pictoDiff = getRenderingMetadata(editor);
-		Parameter pLeft = getParameter(pictoDiff, "left");
-		Parameter pRight = getParameter(pictoDiff, "right");
+		Parameter pOld = getParameter(pictoDiff, "previous");
+		Parameter pNew = getParameter(pictoDiff, "current");
 
 		String diffEngine = null;
 		Parameter diffEnginePar = getParameter(pictoDiff, "diffEngine");
@@ -102,9 +105,9 @@ public class PictoDiffSource extends StandalonePictoSource {
 			return createEmptyViewTree();
 		}
 		FileWrapperEditorPart oldVersionWrapper =
-				new FileWrapperEditorPart(project.getFile(new Path(pLeft.getFile())));
+				new FileWrapperEditorPart(project.getFile(new Path(pOld.getFile())));
 		FileWrapperEditorPart newVersionWrapper =
-				new FileWrapperEditorPart(project.getFile(new Path(pRight.getFile())));
+				new FileWrapperEditorPart(project.getFile(new Path(pNew.getFile())));
 
 		PictoSource oldVersionSource = getSource(oldVersionWrapper);
 		PictoSource newVersionSource = getSource(newVersionWrapper);
@@ -117,8 +120,8 @@ public class PictoDiffSource extends StandalonePictoSource {
 		// set here base uri to find pictodiff icons
 		viewTree.getBaseUris().add(new URI("platform:/plugin/org.eclipse.epsilon.picto.diff/icons/"));
 		ViewTreeMerger.append(viewTree, mergedDiffViewTree, "Differences");
-		ViewTreeMerger.append(viewTree, oldTree, "Previous Version");
 		ViewTreeMerger.append(viewTree, newTree, "Current Version");
+		ViewTreeMerger.append(viewTree, oldTree, "Previous Version");
 
 		return viewTree;
 	}

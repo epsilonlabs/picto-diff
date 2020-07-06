@@ -1,7 +1,7 @@
 <?nsuri picto?>
 <picto standalone="true">
-	<parameter name="left" file="comps/boiler-controller.flexmi.picto"/>
-	<parameter name="right" file="comps/boiler-controller-addStatusProcessor.flexmi.picto"/>
+	<parameter name="previous" file="comps/boiler-controller.flexmi.picto"/>
+	<parameter name="current" file="comps/boiler-controller-addStatusProcessor.flexmi.picto"/>
 	<!-- Examples of valid alternatives: sidebyside, dot, dummy -->
 	<!-- If not found, it searchs among the available diff engines -->
 	<parameter name="diffEngine" value="dot"/>
