@@ -23,10 +23,10 @@ public class ViewTreeMerger {
 					new SideBySideDiffEngineFactory());
 
 	public static ViewTree diffMerge(ViewTree oldTree, ViewTree newTree,
-			String diffEngineName) throws Exception {
+			String manualDiffEngine) throws Exception {
 
 		return diffMerge(new ViewTree(), Arrays.asList(""),
-				oldTree, newTree, getDiffEngineFactory(diffEngineName));
+				oldTree, newTree, getDiffEngineFactory(manualDiffEngine));
 	}
 
 	private static ViewTree diffMerge(ViewTree mergedViewTree, List<String> currentPath,
@@ -61,7 +61,6 @@ public class ViewTreeMerger {
 			if (counterpart == null) {
 				// deleted elements
 				diffView = copy(oldChild);
-				//				diffView.setName(String.format("%s (Deleted)", oldChild.getName()));
 				diffView.setIcon("pdiff-deleted");
 			}
 			append(mergedViewTree, diffView, "");
@@ -70,7 +69,6 @@ public class ViewTreeMerger {
 		for (ViewTree remainingChild : remainingNewChildren) {
 			// new elements
 			ViewTree newChild = copy(remainingChild);
-			//			newChild.setName(String.format("%s (New)", remainingChild.getName()));
 			newChild.setIcon("pdiff-added");
 			newChild.getChildren().addAll(remainingChild.getChildren());
 			append(mergedViewTree, newChild, "");
@@ -128,7 +126,7 @@ public class ViewTreeMerger {
 	}
 
 	private static void diff(ViewTree diffView, ViewTree oldView, ViewTree newView,
-			DiffEngineFactory engineFactory) throws Exception {
+			DiffEngineFactory manualEngineFactory) throws Exception {
 
 		if (isContentEmpty(oldView) && isContentEmpty(newView)) {
 			if (!oldView.getName().equals("") && !newView.getName().equals("")) {
@@ -150,32 +148,28 @@ public class ViewTreeMerger {
 			ViewTree newViewCopy = prepareForDiff(newView);
 
 			if (contentEquals(oldViewCopy, newViewCopy)) {
-				//			diffView.setName(String.format("%s (Same)", diffView.getName()));
 				diffView.setIcon("pdiff-unchanged");
 			}
 			else {
-				//			diffView.setName(String.format("%s (Modified)", diffView.getName()));
 				diffView.setIcon("pdiff-changed");
-				if (engineFactory != null) {
-					DiffEngine engine = engineFactory.createDiffEngine();
-					if (engine.supports(oldViewCopy.getFormat())) {
-						engine.diff(diffView, oldViewCopy, newViewCopy);
-					}
-					else {
-						diffView.setPromise(new StaticContentPromise(engine.getClass().getName() +
-								" does not support the format of the compared files"));
-						diffView.setFormat("text");
+				DiffEngine engine = null;
+				if (manualEngineFactory != null) {
+					DiffEngine candidate = manualEngineFactory.createDiffEngine();
+					if (candidate.supports(oldViewCopy.getFormat())) {
+						engine = candidate;
 					}
 				}
-				else {
+				if (engine == null) {
 					for (DiffEngineFactory factory : DIFF_ENGINE_FACTORIES) {
-						DiffEngine engine = factory.createDiffEngine();
-						if (engine.supports(oldViewCopy.getFormat())) {
-							engine.diff(diffView, oldViewCopy, newViewCopy);
+						DiffEngine candidate = factory.createDiffEngine();
+						if (candidate.supports(oldViewCopy.getFormat())) {
+							engine = candidate;
 							break;
 						}
 					}
 				}
+				// engine cannot be null (at least SideBySideDiffEngine supports it)
+				engine.diff(diffView, oldViewCopy, newViewCopy);
 			}
 		}
 	}
