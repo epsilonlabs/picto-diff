@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.epsilon.picto.StaticContentPromise;
 import org.eclipse.epsilon.picto.ViewTree;
 import org.eclipse.epsilon.picto.diff.PictoDiffPlugin;
@@ -37,8 +36,8 @@ import guru.nidi.graphviz.model.PortNode;
 
 public class DotDiffEngine implements DiffEngine {
 	
-	public static final String SVG_EVENTS_FILE = "transformations/svgEvents.html";
-	public static String svgEvents;
+	private static final String SVG_EVENTS_FILE = "transformations/svgEvents.html";
+	private static String svgEvents;
 
 	private static final double GRAPH_SCALE = 1.3;
 
@@ -956,15 +955,7 @@ public class DotDiffEngine implements DiffEngine {
 
 	public static String getSvgEvents() throws IOException {
 		if (svgEvents == null) {
-			if (PictoDiffPlugin.getDefault() == null) {
-				// Standalone java
-				svgEvents = new String(Files.readAllBytes(Paths.get(SVG_EVENTS_FILE)));
-			}
-			else {
-				// Eclipse plugin (works, but there is probably an easier way to do this?)
-				svgEvents = new String(Files.readAllBytes(Paths.get(FileLocator.resolve(
-						PictoDiffPlugin.getDefault().getBundle().getEntry(SVG_EVENTS_FILE)).getPath())));
-			}
+			svgEvents = PictoDiffPlugin.getFileContents(SVG_EVENTS_FILE);
 		}
 		return svgEvents;
 	}

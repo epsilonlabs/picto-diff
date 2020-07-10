@@ -1,5 +1,14 @@
 package org.eclipse.epsilon.picto.diff;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+import org.apache.commons.io.IOUtils;
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
@@ -49,5 +58,19 @@ public class PictoDiffPlugin extends AbstractUIPlugin {
 		
 		public ImageDescriptor getImageDescriptor(String path) {
 			return imageDescriptorFromPlugin(PLUGIN_ID, path);
+		}
+		
+		public static String getFileContents(String pluginFile) throws IOException {
+			String fileContents;
+			if (plugin == null) {
+				fileContents = new String(Files.readAllBytes(Paths.get(pluginFile)));
+			}
+			else {
+				InputStream stream = FileLocator.openStream(
+						plugin.getBundle(),	new Path(pluginFile), false);
+				fileContents = IOUtils.toString(stream, StandardCharsets.UTF_8);
+				stream.close();
+			}
+			return fileContents;
 		}
 }

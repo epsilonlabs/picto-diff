@@ -1,11 +1,8 @@
 package org.eclipse.epsilon.picto.diff.engines.sidebyside;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Iterator;
 
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.epsilon.picto.PictoView;
 import org.eclipse.epsilon.picto.ViewContent;
 import org.eclipse.epsilon.picto.ViewRenderer;
@@ -16,7 +13,7 @@ import org.eclipse.epsilon.picto.diff.engines.DiffEngine;
 public class SideBySideDiffEngine implements DiffEngine {
 
 	private static final String HEADER_FILE = "transformations/sideBySideDiffHeader.html";
-	private String headerText;
+	private static String headerText;
 
 	@Override
 	public boolean supports(String format) {
@@ -68,14 +65,8 @@ public class SideBySideDiffEngine implements DiffEngine {
 	//   files/sideBySideDiff-{fileBasedIframes, templateContentIframes}.html
 
 	private void loadHeaderText() throws IOException {
-		if (PictoDiffPlugin.getDefault() == null) {
-			// Standalone java
-			headerText = new String(Files.readAllBytes(Paths.get(HEADER_FILE)));
-		}
-		else {
-			// Eclipse plugin (works, but there is probably an easier way to do this?)
-			headerText = new String(Files.readAllBytes(Paths.get(FileLocator.resolve(
-					PictoDiffPlugin.getDefault().getBundle().getEntry(HEADER_FILE)).getPath())));
+		if (headerText == null) {
+			headerText = PictoDiffPlugin.getFileContents(HEADER_FILE);
 		}
 	}
 
