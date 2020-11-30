@@ -1,7 +1,0 @@
-<?nsuri picto?>
-<picto standalone="true">
-	<parameter name="previous" file="html/risks-baseline.risks2html.picto"/>
-	<parameter name="current" file="html/risks-addRisks.risks2html.picto"/>
-
-	<parameter name="diffEngine" value="html"/>
-</picto>
