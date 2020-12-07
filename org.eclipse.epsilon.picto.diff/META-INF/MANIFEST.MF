@@ -11,7 +11,8 @@ Require-Bundle: org.eclipse.epsilon.picto;bundle-version="1.6.0",
  org.eclipse.ui.ide;bundle-version="3.14.0",
  org.eclipse.epsilon.common.dt;bundle-version="1.6.0",
  org.eclipse.epsilon.picto.diff.dependencies;bundle-version="0.1.0",
- org.eclipse.epsilon.emc.plainxml;bundle-version="1.6.0"
+ org.eclipse.epsilon.emc.plainxml;bundle-version="1.6.0",
+ org.eclipse.compare
 Automatic-Module-Name: org.eclipse.epsilon.picto.diff
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: org.eclipse.epsilon.picto.diff.engines.dot,

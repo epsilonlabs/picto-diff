@@ -20,4 +20,10 @@
             class="org.eclipse.epsilon.picto.diff.source.FlexmiDiffSource">
       </pictoSource>
    </extension>
+   <extension
+         point="org.eclipse.epsilon.picto.pictoSource">
+      <pictoSource
+            class="org.eclipse.epsilon.picto.diff.source.CompareEditorSource">
+      </pictoSource>
+   </extension>
 </plugin>

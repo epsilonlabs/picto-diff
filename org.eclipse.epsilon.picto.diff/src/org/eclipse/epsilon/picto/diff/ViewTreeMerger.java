@@ -22,6 +22,10 @@ public class ViewTreeMerger {
 					new HtmlDiffEngineFactory(),
 					new SideBySideDiffEngineFactory());
 
+	public static ViewTree diffMerge(ViewTree oldTree, ViewTree newTree) throws Exception {
+		return diffMerge(oldTree, newTree, null);
+	}
+
 	public static ViewTree diffMerge(ViewTree oldTree, ViewTree newTree,
 			String manualDiffEngine) throws Exception {
 
