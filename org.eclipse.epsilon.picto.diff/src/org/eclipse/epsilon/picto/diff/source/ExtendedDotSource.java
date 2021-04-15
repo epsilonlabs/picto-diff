@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.epsilon.picto.StaticContentPromise;
 import org.eclipse.epsilon.picto.ViewTree;
 import org.eclipse.epsilon.picto.diff.engines.dot.util.GraphPromiseGenerator;
@@ -36,11 +36,12 @@ public class ExtendedDotSource extends DotSource {
 
 	@Override
 	public ViewTree getViewTree(IEditorPart editor) throws Exception {
-		IFile iFile = waitForFile(editor);
-		if (iFile == null)
+		IPath path = waitForPath(editor);
+		if (path == null || !path.isAbsolute()) {
 			return createEmptyViewTree();
+		}
 
-		InputStream fileStream = new FileInputStream(iFile.getLocation().toOSString());
+		InputStream fileStream = new FileInputStream(path.toOSString());
 		MutableGraph graph = new Parser().read(fileStream);
 		GraphPromiseGenerator promise = new GraphPromiseGenerator(graph.copy());
 
