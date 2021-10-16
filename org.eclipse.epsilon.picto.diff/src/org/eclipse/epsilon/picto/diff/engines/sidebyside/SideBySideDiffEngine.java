@@ -12,8 +12,14 @@ import org.eclipse.epsilon.picto.diff.engines.DiffEngine;
 
 public class SideBySideDiffEngine implements DiffEngine {
 
-	private static final String HEADER_FILE = "transformations/sideBySideDiffHeader.html";
-	private static String headerText;
+	public static final int TEMPLATE_TOP = 0;
+	public static final int TEMPLATE_MIDDLE = 1;
+	public static final int TEMPLATE_BOTTOM = 2;
+
+	private static final String TEMPLATE_FILE = "transformations/sideBySideDiffTemplate.html";
+	private static final String TEMPLATE_DELIMITER = "@@@";
+
+	private static String[] templateParts;
 
 	@Override
 	public boolean supports(String format) {
@@ -23,7 +29,7 @@ public class SideBySideDiffEngine implements DiffEngine {
 	@Override
 	public void diff(ViewTree diffView, ViewTree oldView, ViewTree newView) throws Exception {
 
-		loadHeaderText();
+		loadTemplateParts();
 
 		PictoView pictoView = new PictoView();
 		pictoView.setViewRenderer(new ViewRenderer(null));
@@ -38,7 +44,7 @@ public class SideBySideDiffEngine implements DiffEngine {
 
 			// new view on the left, old view on the right (as EGit does)
 			SideBySideViewContent combinedContent = new SideBySideViewContent(
-					headerText, newContent.getText(), oldContent.getText());
+					templateParts, newContent.getText(), oldContent.getText());
 			combinedContent.setLabel(oldContent.getLabel());
 			if (diffContent == null) {
 				diffContent = combinedContent;
@@ -64,9 +70,9 @@ public class SideBySideDiffEngine implements DiffEngine {
 	//   iframes that load external html files, can be found in
 	//   files/sideBySideDiff-{fileBasedIframes, templateContentIframes}.html
 
-	private void loadHeaderText() throws IOException {
-		if (headerText == null) {
-			headerText = PictoDiffPlugin.getFileContents(HEADER_FILE);
+	private void loadTemplateParts() throws IOException {
+		if (templateParts == null) {
+			templateParts = PictoDiffPlugin.getFileContents(TEMPLATE_FILE).split(TEMPLATE_DELIMITER);
 		}
 	}
 

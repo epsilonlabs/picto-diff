@@ -1,0 +1,68 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></meta>
+    <style>
+        html, body, div {
+            height: 100%;
+            width: 99.9%;
+            margin: 0 auto;
+        }
+        .tc_iframe {
+            width: 50%;
+            float: left;
+            text-align: center;
+            font-style: bold;
+            font-size: 18px;
+
+            /* for flexible height */
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .top {
+            flex-shrink: 0;
+            width: 100%;
+            text-align: center;
+        }
+        .bottom {
+            height: 100%; /* 100% height of its container minus height of siblings */
+            width: 100%;
+        }
+    </style>
+    <script type="text/javascript">
+        window.addEventListener('load', function () {
+
+            var iframe = document.createElement('iframe');
+            document.getElementById('leftContainer').appendChild(iframe);
+            iframe.contentWindow.document.open();
+            iframe.contentWindow.document.write(document.getElementById('leftIframeContent').innerHTML);
+            iframe.contentWindow.document.close();
+            iframe.classList.add("bottom")
+
+            iframe = document.createElement('iframe');
+            document.getElementById('rightContainer').appendChild(iframe);
+            iframe.contentWindow.document.open();
+            iframe.contentWindow.document.write(document.getElementById('rightIframeContent').innerHTML);
+            iframe.contentWindow.document.close();
+            iframe.classList.add("bottom")
+        });
+    </script>
+</head>
+<body>
+    <div id="leftContainer" class="tc_iframe">
+        <span class="top">Current Version</span>
+    </div>
+    <div id="rightContainer" class="tc_iframe">
+        <span class="top">Previous Version</span>
+    </div>
+
+    <!-- Hidden divs to store the iframes dynamic content -->
+    <div id="leftIframeContent" style="display: none; position: absolute;">
+@@@
+    </div>
+    <div id="rightIframeContent" style="display: none; position: absolute;">
+@@@
+    </div>
+</body>
+</html>
