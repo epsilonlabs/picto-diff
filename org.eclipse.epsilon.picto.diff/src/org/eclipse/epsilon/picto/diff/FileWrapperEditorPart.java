@@ -30,6 +30,11 @@ public class FileWrapperEditorPart implements IEditorPart {
 	}
 
 	@Override
+	public String getTitle() {
+		return file != null ? file.getName() : null;
+	}
+
+	@Override
 	public void addPropertyListener(IPropertyListener listener) {
 		// TODO Auto-generated method stub
 	}
@@ -47,12 +52,6 @@ public class FileWrapperEditorPart implements IEditorPart {
 
 	@Override
 	public IWorkbenchPartSite getSite() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String getTitle() {
 		// TODO Auto-generated method stub
 		return null;
 	}

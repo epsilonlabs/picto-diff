@@ -55,8 +55,18 @@ public class FileWrapper implements IFile {
 	}
 
 	@Override
+	public IPath getRawLocation() {
+		return getLocation();
+	}
+
+	@Override
 	public String getFileExtension() {
 		return FilenameUtils.getExtension(file.getAbsolutePath());
+	}
+
+	@Override
+	public String getName() {
+		return file.getName();
 	}
 
 	@Override
@@ -214,11 +224,7 @@ public class FileWrapper implements IFile {
 		return null;
 	}
 
-	@Override
-	public IPath getRawLocation() {
 
-		return null;
-	}
 
 	@Override
 	public URI getRawLocationURI() {
@@ -525,12 +531,6 @@ public class FileWrapper implements IFile {
 
 	@Override
 	public IFileState[] getHistory(IProgressMonitor monitor) throws CoreException {
-
-		return null;
-	}
-
-	@Override
-	public String getName() {
 
 		return null;
 	}
