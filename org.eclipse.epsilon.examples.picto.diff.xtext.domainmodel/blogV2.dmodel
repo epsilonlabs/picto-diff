@@ -1,4 +1,5 @@
 datatype String
+datatype int
 
 entity Blog {
     "Main entity. A blog is composed of posts"
@@ -24,4 +25,10 @@ entity Comment extends HasAuthor {
 
     content: String
     many responses: Comment
+    many votes: Vote
+}
+
+entity Vote {
+	value: int
+	label: String
 }
