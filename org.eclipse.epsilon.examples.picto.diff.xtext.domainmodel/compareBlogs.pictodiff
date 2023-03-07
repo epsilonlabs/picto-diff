@@ -1,0 +1,7 @@
+<?nsuri picto?>
+<picto standalone="true">
+	<parameter name="previous" file="blogV1.dmodel"/>
+	<parameter name="current" file="blogV2.dmodel"/>
+
+	<parameter name="diffEngine" value="sidebyside"/>
+</picto>
