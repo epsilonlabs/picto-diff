@@ -79,7 +79,7 @@ public class CsvDiffEngine extends HtmlDiffEngine {
 
 	@Override
 	public boolean supports(String format) {
-		return format.equals("csv");
+		return format.equalsIgnoreCase("csv");
 	}
 }
 

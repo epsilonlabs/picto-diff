@@ -9,6 +9,7 @@ import org.eclipse.epsilon.picto.ViewContent;
 import org.eclipse.epsilon.picto.ViewTree;
 import org.eclipse.epsilon.picto.diff.engines.DiffEngine;
 import org.eclipse.epsilon.picto.diff.engines.DiffEngineFactory;
+import org.eclipse.epsilon.picto.diff.engines.csv.CsvDiffEngineFactory;
 import org.eclipse.epsilon.picto.diff.engines.dot.DotDiffEngineFactory;
 import org.eclipse.epsilon.picto.diff.engines.dummy.DummyDiffEngineFactory;
 import org.eclipse.epsilon.picto.diff.engines.html.HtmlDiffEngineFactory;
@@ -18,6 +19,7 @@ public class ViewTreeMerger {
 
 	static final List<DiffEngineFactory> DIFF_ENGINE_FACTORIES =
 			Arrays.asList(
+					new CsvDiffEngineFactory(),
 					new HtmlDiffEngineFactory(),
 					new DotDiffEngineFactory(),
 					new HtmlDiffEngineFactory(),
