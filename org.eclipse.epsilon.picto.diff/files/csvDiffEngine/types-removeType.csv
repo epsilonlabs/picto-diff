@@ -1,0 +1,7 @@
+Name,Type,Usages
+String,DataType,6
+int,DataType,1
+HasAuthor,Entity,0
+Post,Entity,1
+Comment,Entity,2
+Vote,Entity,1

@@ -17,9 +17,12 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.eclipse.epsilon.picto.ViewContent;
+import org.eclipse.epsilon.picto.diff.engines.html.HtmlDiffEngine;
 
 public class CsvDiffContentTransformer {
 	
+	public static final String[] COLUMN_IDENTIFIERS = { "id", "name" };
+
 	public ViewContent transform(ViewContent content) throws Exception {
 
 		CSVFormat format = CSVFormat.RFC4180.withFirstRecordAsHeader();
@@ -27,10 +30,12 @@ public class CsvDiffContentTransformer {
 
 		List<CSVRecord> records = parser.getRecords();
 		List<String> columnTypes = getColumnTypes(records);
+		String idColumn = getIdColumn(parser);
 
 		StringBuilder result = new StringBuilder();
+		// TODO: research why pagination resets row style (disabled atm for diffing)
 		result.append(
-				"<table class=\"table striped table-border row-hover\" data-horizontal-scroll=\"true\" data-role=\"table\" data-pagination=\"true\">")
+				"<table class=\"table table-border row-hover\" data-horizontal-scroll=\"true\"")
 				.append("<thead>");
 
 		for (int i = 0; i < parser.getHeaderNames().size(); i++) {
@@ -42,7 +47,13 @@ public class CsvDiffContentTransformer {
 		result.append("</thead>").append("<tbody>");
 
 		for (CSVRecord record : records) {
-			result.append("<tr>");
+			if (idColumn != null) {
+				result.append(String.format("<tr %s=\"%s\">",
+						HtmlDiffEngine.DIFF_ID, record.get(idColumn)));
+			}
+			else {
+				result.append("<tr>");
+			}
 			for (String cell : record) {
 				result.append("<td>").append(cell).append("</td>");
 			}
@@ -51,6 +62,17 @@ public class CsvDiffContentTransformer {
 		result.append("</tbody>").append("</table>");
 		
 		return new ViewContent("html", getHtml(result.toString()));
+	}
+
+	protected String getIdColumn(CSVParser parser) {
+		for (String columnName : parser.getHeaderNames()) {
+			for (String ID : COLUMN_IDENTIFIERS) {
+				if (columnName.equalsIgnoreCase(ID)) {
+					return columnName;
+				}
+			}
+		}
+		return null;
 	}
 
 	protected String getHtml(String content) {

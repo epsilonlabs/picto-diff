@@ -21,14 +21,14 @@ import org.jsoup.select.Elements;
 public class HtmlDiffEngine implements DiffEngine {
 
 	// any html element to be diffed should declare this attribute
-	private static final String DIFF_ID = "pictoid";
-	private static final String DIFF_ELEMS_SELECTOR = String.format("[%s]", DIFF_ID);
+	public static final String DIFF_ID = "pictoid";
+	public static final String DIFF_ELEMS_SELECTOR = String.format("[%s]", DIFF_ID);
 
-	private static final String ADDED_CLASS = "added";
-	private static final String PREVIOUS_CHANGED_CLASS = "previouschanged";
-	private static final String CURRENT_CHANGED_CLASS = "currentchanged";
-	private static final String DELETED_CLASS = "deleted";
-	private static final String UNCHANGED_CLASS = "unchanged";
+	public static final String ADDED_CLASS = "added";
+	public static final String PREVIOUS_CHANGED_CLASS = "previouschanged";
+	public static final String CURRENT_CHANGED_CLASS = "currentchanged";
+	public static final String DELETED_CLASS = "deleted";
+	public static final String UNCHANGED_CLASS = "unchanged";
 
 	// html diff elements to compare and merge; traversed at the same time
 	private Elements leftDiffElems;

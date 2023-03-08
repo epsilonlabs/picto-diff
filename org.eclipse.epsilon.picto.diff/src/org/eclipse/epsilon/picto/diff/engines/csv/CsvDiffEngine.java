@@ -44,7 +44,10 @@ public class CsvDiffEngine extends HtmlDiffEngine {
 		baselineView.setFormat("csv");
 
 		List<String> modifiedFiles = Arrays.asList(
-				"types-addType.csv");
+				"types-addType.csv",
+				"types-removeType.csv",
+				"types-modifyType.csv",
+				"types-all.csv");
 
 		for (String file : modifiedFiles) {
 
