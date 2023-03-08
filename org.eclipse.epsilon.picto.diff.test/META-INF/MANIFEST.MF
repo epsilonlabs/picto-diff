@@ -7,5 +7,5 @@ Bundle-Version: 1.0.0.qualifier
 Require-Bundle: org.eclipse.epsilon.picto.diff,
  org.eclipse.epsilon.picto,
  org.eclipse.epsilon.picto.diff.dependencies,
- org.junit
+ org.junit;bundle-version="4.13.2"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8

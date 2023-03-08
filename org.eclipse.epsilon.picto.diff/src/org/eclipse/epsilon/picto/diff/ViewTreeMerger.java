@@ -18,6 +18,7 @@ public class ViewTreeMerger {
 
 	static final List<DiffEngineFactory> DIFF_ENGINE_FACTORIES =
 			Arrays.asList(
+					new HtmlDiffEngineFactory(),
 					new DotDiffEngineFactory(),
 					new HtmlDiffEngineFactory(),
 					new SideBySideDiffEngineFactory());
